@@ -4851,7 +4851,7 @@ spawn(function()
     end)
   end
 end)
-Toggle = Tabs.Prehistoric:AddToggle("Toggle", {Title = "Reiniciar automática o Volcano ao concluir", Description = ""Resetar ao Concluir": O Vulcão não coleta ossos de dinossauro nem outros itens...", Default = false})
+Toggle = Tabs.Prehistoric:AddToggle("Toggle", {Title = "Reiniciar automática o Volcano ao concluir", Description = "Resetar ao Concluir": O Vulcão não coleta ossos de dinossauro nem outros itens...", Default = false})
 Toggle:OnChanged(function(Value)
   _G.ResetPH = Value
 end)
