@@ -1277,7 +1277,7 @@ local Mastery_Config = Tabs.Main:AddDropdown("Mastery_Config",{Title = "Choose I
 Mastery_Config:OnChanged(function(Value)
   SelectIsland = Value
 end)
-local MasteryFruits = Tabs.Main:AddToggle("MasteryFruits", {Title = "Auto Mastery Fruits", Description = "", Default = false})
+local MasteryFruits = Tabs.Main:AddToggle("MasteryFruits", {Title = "Auto Masterizar Fruta", Description = "", Default = false})
 MasteryFruits:OnChanged(function(Value)
   _G.FarmMastery_Dev = Value
 end)
@@ -1313,7 +1313,7 @@ spawn(function()
     end
   end
 end)
-local MasteryGun = Tabs.Main:AddToggle("MasteryGun", {Title = "Auto Mastery Gun", Description = "", Default = false})
+local MasteryGun = Tabs.Main:AddToggle("MasteryGun", {Title = "Auto Masterizar Arma", Description = "", Default = false})
 MasteryGun:OnChanged(function(Value)
   _G.FarmMastery_G = Value
 end)
@@ -1388,7 +1388,7 @@ spawn(function()
     end
   end
 end)
-local MasterySword = Tabs.Main:AddToggle("MasterySword", {Title = "Auto Mastery All Sword", Description = "", Default = false})
+local MasterySword = Tabs.Main:AddToggle("MasterySword", {Title = "Auto Masterizar Todas Espadas", Description = "", Default = false})
 MasterySword:OnChanged(function(Value)
   _G.FarmMastery_S = Value
 end)
@@ -1530,7 +1530,7 @@ spawn(function()
     end
   end
 end)
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Bones", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Bones/Ossos", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.AutoFarm_Bone = Value
 end)
@@ -1570,11 +1570,11 @@ spawn(function()
     end
   end
 end)
-local Q = Tabs.Main:AddToggle("Q", {Title = "Accept Quests", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Aceitar Missões", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.AcceptQuestC = Value
 end)          
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Farm Mirror", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Farm Espelho Fractal", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.AutoMiror = Value
 end)
@@ -1615,7 +1615,7 @@ spawn(function()
     end
   end
 end)
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Random Bones", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Girar Ossos/Bones", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.Auto_Random_Bone = Value
 end)
@@ -1628,7 +1628,7 @@ spawn(function()
     end)
   end
 end)
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Try Luck Gravestone", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Luck/Sorte da Gravestone", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.TryLucky = Value
 end)
@@ -1644,7 +1644,7 @@ spawn(function()
     end
   end
 end)
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Pray Gravestone", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Rezar Gravestone", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.Praying = Value
 end)
@@ -1662,7 +1662,7 @@ spawn(function()
 end)
 
 Tabs.Main:AddSection("Unlocked Dungeon")
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Unlock Dough dungeon", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Desbloquear Raid Dough", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.Doughv2 = Value
 end)
@@ -1715,7 +1715,7 @@ spawn(function()
     end
   end
 end)
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Unlock Phoenix dungeon", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Desbloquear Raid Phoenix", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.AutoPhoenixF = Value
 end)
@@ -1748,7 +1748,7 @@ spawn(function()
 end)
 
 Tabs.Main:AddSection("Buso/Aura Colours")
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Teleport Barista Cousin", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Teleportar Barista Cousin", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.Tp_MasterA = Value
 end)
@@ -1763,11 +1763,11 @@ spawn(function()
     end
   end
 end)
-Tabs.Main:AddButton({Title = "Buy Buso Colors", Description = "",
+Tabs.Main:AddButton({Title = "Comprar Haki Cor", Description = "",
 Callback = function()
   replicated.Remotes.CommF_:InvokeServer("ColorsDealer","2")
 end})
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Rainbow Colors", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Rainbow Cor", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.Auto_Rainbow_Haki = Value
 end)
@@ -1836,13 +1836,13 @@ spawn(function()
     end    
   end)
 end)
-local Q = Tabs.Main:AddToggle("Q", {Title = "Accept Rainbow Quest Faster", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Aceitar Rainbow Missão Faster", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.GetQFast = Value
 end)
 
 Tabs.Main:AddSection("Instinct / Observation")
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Farm Observation", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Farmar Esquiva Obs", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.obsFarm = Value
 end)
@@ -1912,7 +1912,7 @@ spawn(function()
     end)
   end
 end)
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Observation V2", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Haki Observação V2", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.AutoKenVTWO = Value
 end)
@@ -1991,7 +1991,7 @@ spawn(function()
   end
 end)
 Tabs.Main:AddSection("Upgrade Races V3")
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Upgrade Mink V3", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Evoluir Mink V3 Automaticamente", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.Auto_Mink = Value
 end)
@@ -2026,7 +2026,7 @@ spawn(function()
     end)
   end
 end)
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Upgrade Human V3", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Evoluir Humano V3 Automaticamente", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.Auto_Human = Value
 end)
@@ -2070,7 +2070,7 @@ spawn(function()
     end)
   end
 end)
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Upgrade Skypiea V3", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Evoluir Skypiea V3 Automaticamente", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.Auto_Skypiea = Value
 end)
@@ -2110,7 +2110,7 @@ spawn(function()
     end)
   end
 end)
-local Q = Tabs.Main:AddToggle("Q", {Title = "Auto Upgrade FishMan V3", Description = "", Default = false})
+local Q = Tabs.Main:AddToggle("Q", {Title = "Evoluir Homem-Peixe V3 Automaticamente", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.Auto_Fish = Value
 end)
@@ -2205,7 +2205,7 @@ end)
 
 Tabs.Settings:AddSection("Settings / Configure")
 local _Weapon = {"Melee","Sword","Blox Fruit","Gun"}
-local Weapon_Config = Tabs.Settings:AddDropdown("Weapon_Config",{Title = "Select Weapon",Values = _Weapon,Multi = false,Default = 1})
+local Weapon_Config = Tabs.Settings:AddDropdown("Weapon_Config",{Title = "Selecionar Arma",Values = _Weapon,Multi = false,Default = 1})
 Weapon_Config:OnChanged(function(Value)
   _G.ChooseWP = Value
 end)
@@ -2253,11 +2253,11 @@ local Initialize = Tabs.Settings:AddToggle("Initialize", {Title = "Initialize At
 Initialize:OnChanged(function(Value)
   _G.Seriality = Value
 end)
-local Bringmob = Tabs.Settings:AddToggle("Bringmob", {Title = "Bring Mobs", Description = "", Default = true})
+local Bringmob = Tabs.Settings:AddToggle("Bringmob", {Title = "Juntar Npcs", Description = "", Default = true})
 Bringmob:OnChanged(function(Value)
   _B = Value
 end)
-local BusuAura = Tabs.Settings:AddToggle("BusuAura", {Title = "Auto Turn on Buso", Description = "", Default = true})
+local BusuAura = Tabs.Settings:AddToggle("BusuAura", {Title = "Auto Haki do Armamento", Description = "", Default = true})
 BusuAura:OnChanged(function(Value)
   Boud = Value
 end)
@@ -2272,7 +2272,7 @@ spawn(function()
   end
 end)
 
-local RaceV3Aura = Tabs.Settings:AddToggle("RaceV3Aura", {Title = "Auto Turn on Race V3", Description = "", Default = false})
+local RaceV3Aura = Tabs.Settings:AddToggle("RaceV3Aura", {Title = "Auto Ativar V3", Description = "", Default = false})
 RaceV3Aura:OnChanged(function(Value)
   _G.RaceClickAutov3 = Value
 end)
@@ -2288,7 +2288,7 @@ spawn(function()
     end)
   end
 end)
-local RaceV4Aura = Tabs.Settings:AddToggle("RaceV4Aura", {Title = "Auto Turn on Race V4", Description = "", Default = false})
+local RaceV4Aura = Tabs.Settings:AddToggle("RaceV4Aura", {Title = "Auto Ativar V4", Description = "", Default = false})
 RaceV4Aura:OnChanged(function(Value)
   _G.RaceClickAutov4 = Value
 end)
@@ -2303,15 +2303,15 @@ spawn(function()
     end)
   end
 end)
-local RandomAround = Tabs.Settings:AddToggle("RandomAround", {Title = "Auto Turn on Spin Position", Description = "", Default = false})
+local RandomAround = Tabs.Settings:AddToggle("RandomAround", {Title = "Ativar Automaticamente a Posição de Spin", Description = "", Default = false})
 RandomAround:OnChanged(function(Value)
   RandomCFrame = Value
 end)
-local Byp = Tabs.Settings:AddToggle("Byp", {Title = "Turn on Bypass Teleport", Description = "", Default = false})
+local Byp = Tabs.Settings:AddToggle("Byp", {Title = "Ativar Bypass de Teleporte", Description = "", Default = false})
 Byp:OnChanged(function(Value)
   _G.Bypass = Value
 end)
-local SafeModes = Tabs.Settings:AddToggle("SafeModes", {Title = "Panic Mode", Description = "turn on for safe ur health if low", Default = false})
+local SafeModes = Tabs.Settings:AddToggle("SafeModes", {Title = "Ative Para Proteger Sua Vida Quando Estiver Baixa", Description = "turn on for safe ur health if low", Default = false})
 SafeModes:OnChanged(function(Value)
   _G.Safemode = Value
 end)
@@ -2391,7 +2391,7 @@ StatusSelect:OnChanged(function(Value)
   pSats = Value
 end)
 
-local StatsUpg = Tabs.Settings:AddToggle("StatsUpg", {Title = "Auto Melee", Description = "", Default = false})
+local StatsUpg = Tabs.Settings:AddToggle("StatsUpg", {Title = "Auto Combate", Description = "", Default = false})
 StatsUpg:OnChanged(function(Value)
   _G.Auto_Melee = Value
 end)
@@ -2403,7 +2403,7 @@ spawn(function()
   end
 end)
 
-local StatsUpg = Tabs.Settings:AddToggle("StatsUpg", {Title = "Auto Swords", Description = "", Default = false})
+local StatsUpg = Tabs.Settings:AddToggle("StatsUpg", {Title = "Auto Espada", Description = "", Default = false})
 StatsUpg:OnChanged(function(Value)
   _G.Auto_Sword = Value
 end)
@@ -2414,7 +2414,7 @@ spawn(function()
     end)
   end
 end)
-local StatsUpg = Tabs.Settings:AddToggle("StatsUpg", {Title = "Auto Gun", Description = "", Default = false})
+local StatsUpg = Tabs.Settings:AddToggle("StatsUpg", {Title = "Auto Arma", Description = "", Default = false})
 StatsUpg:OnChanged(function(Value)
   _G.Auto_Gun = Value
 end)
@@ -2425,7 +2425,7 @@ spawn(function()
     end)
   end
 end)
-local StatsUpg = Tabs.Settings:AddToggle("StatsUpg", {Title = "Auto Blox Fruit", Description = "", Default = false})
+local StatsUpg = Tabs.Settings:AddToggle("StatsUpg", {Title = "Auto Blox Fruta", Description = "", Default = false})
 StatsUpg:OnChanged(function(Value)
   _G.Auto_DevilFruit = Value
 end)
@@ -2436,7 +2436,7 @@ spawn(function()
     end)
   end
 end)
-local StatsUpg = Tabs.Settings:AddToggle("StatsUpg", {Title = "Auto Defense", Description = "", Default = false})
+local StatsUpg = Tabs.Settings:AddToggle("StatsUpg", {Title = "Auto Defesa", Description = "", Default = false})
 StatsUpg:OnChanged(function(Value)
   _G.Auto_Defense = Value
 end)
@@ -6345,16 +6345,16 @@ spawn(function()
 end)
 
 Tabs.Shop:AddSection("Shop Options")
-Tabs.Shop:AddButton({Title = "Buy Buso", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Haki", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyHaki","Buso")
 end})
-Tabs.Shop:AddButton({Title = "Buy Geppo", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Sky Jump", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyHaki","Geppo")
 end})
-Tabs.Shop:AddButton({Title = "Buy Soru", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Flash Step", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyHaki","Soru")
 end})
-Tabs.Shop:AddButton({Title = "Buy Ken", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Haki Observação", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("KenTalk","Buy")
 end})
 
@@ -6394,19 +6394,19 @@ Tabs.Shop:AddButton({Title = "Buy SanguineArt", Description = "",Callback = func
 end})
 
 Tabs.Shop:AddSection("Accessory")
-Tabs.Shop:AddButton({Title = "Buy Tomoe Ring", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Tomoe Ring", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Tomoe Ring")
 end})
-Tabs.Shop:AddButton({Title = "Buy Black Cape", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Black Cape", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Black Cape")
 end})
-Tabs.Shop:AddButton({Title = "Buy Swordsman Hat", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Swordsman Hat", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Swordsman Hat")
 end})
-Tabs.Shop:AddButton({Title = "Buy Bizarre Rifle", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Bizarre Rifle", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("Ectoplasm","Buy", 1)
 end})
-Tabs.Shop:AddButton({Title = "Buy Ghoul Mask", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Ghoul Mask", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("Ectoplasm","Buy", 2)
 end})
 
@@ -6446,66 +6446,66 @@ Tabs.Shop:AddButton({Title = "Craft MythicalScroll", Description = "",Callback =
 end})   
 
 Tabs.Shop:AddSection("Weapon World1")
-Tabs.Shop:AddButton({Title = "Buy Cutlass", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Cutlass", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Cutlass")
 end})
-Tabs.Shop:AddButton({Title = "Buy Katana", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Katana", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Katana")
 end})
-Tabs.Shop:AddButton({Title = "Buy Iron Mace", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Iron Mace", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Iron Mace")
 end})   
-Tabs.Shop:AddButton({Title = "Buy Duel Katana", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Duel Katana", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Duel Katana")
 end})   
-Tabs.Shop:AddButton({Title = "Buy Triple Katana", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Triple Katana", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Triple Katana")
 end})  
-Tabs.Shop:AddButton({Title = "Buy Pipe", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Pipe", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Pipe")
 end})  
-Tabs.Shop:AddButton({Title = "Buy Dual-Headed Blade", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Dual-Headed Blade", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Dual-Headed Blade")
 end})   
-Tabs.Shop:AddButton({Title = "Buy Bisento", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Bisento", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Bisento")
 end})  
-Tabs.Shop:AddButton({Title = "Buy Soul Cane", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Soul Cane", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Soul Cane")
 end})
-Tabs.Shop:AddButton({Title = "Buy Slingshot", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Slingshot", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Slingshot")
 end})
-Tabs.Shop:AddButton({Title = "Buy Musket", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Musket", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Musket")
 end})    
-Tabs.Shop:AddButton({Title = "Buy Dual Flintlock", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Dual Flintlock", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Dual Flintlock")
 end})   
-Tabs.Shop:AddButton({Title = "Buy Flintlock", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Flintlock", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Flintlock")
 end})   
-Tabs.Shop:AddButton({Title = "Buy Refined Flintlock", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Refined Flintlock", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Refined Flintlock")
 end})   
-Tabs.Shop:AddButton({Title = "Buy Cannon", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Cannon", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BuyItem","Cannon")
 end}) 
-Tabs.Shop:AddButton({Title = "Buy Kabucha", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Kabucha", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BlackbeardReward","Slingshot","2")
 end})
 
 Tabs.Shop:AddSection("Fragments shop")
-Tabs.Shop:AddButton({Title = "Buy Refund Stats", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Resetar Status", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BlackbeardReward","Refund","2")
 end})
-Tabs.Shop:AddButton({Title = "Buy Reroll Race", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Girar Raça", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("BlackbeardReward","Reroll","2")
 end})   
-Tabs.Shop:AddButton({Title = "Buy Ghoul Race (2.5k)", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Raça Ghoul (2.5k)", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("Ectoplasm"," Change", 4)
 end})	
-Tabs.Shop:AddButton({Title = "Buy Cyborg Race (2.5k)", Description = "",Callback = function()
+Tabs.Shop:AddButton({Title = "Comprar Raça Cyborg (2.5k)", Description = "",Callback = function()
   replicated.Remotes.CommF_:InvokeServer("CyborgTrainer"," Buy")
 end})
 
