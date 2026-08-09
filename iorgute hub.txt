@@ -140,7 +140,14 @@ Attack.KillSea = function(model,Succes)
   EquipWeapon(_G.SelectWeapon)
   local Equipped = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
   local ToolTip = Equipped.ToolTip
-  if ToolTip == "Blox Fruit" then _tp(model.HumanoidRootPart.CFrame * CFrame.new(0,10,0) * CFrame.Angles(0,math.rad(90),0)) else notween(model.HumanoidRootPart.CFrame * CFrame.new(0,50,8)) wait(.85)notween(model.HumanoidRootPart.CFrame * CFrame.new(0,400,0)) wait(1)end
+  if ToolTip == "Blox Fruit" then
+    _tp(model.HumanoidRootPart.CFrame * CFrame.new(0,10,0) * CFrame.Angles(0,math.rad(90),0))
+else
+    -- Terror Shark: mantém o personagem em uma altura fixa para o M1,
+    -- evitando o salto de 50 -> 400 studs a cada ciclo.
+    notween(model.HumanoidRootPart.CFrame * CFrame.new(0,10,8))
+    wait(0.15)
+end
   end
 end
 Attack.Sword = function(model,Succes)
