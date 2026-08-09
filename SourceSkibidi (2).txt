@@ -758,20 +758,20 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 local Tabs = {
-  Shop = Window:AddTab({Title = "Cửa Hàng", Icon = "shopping-cart"}),
-  Combat = Window:AddTab({Title = "Thuộc Người Chơi", Icon = "user"}),
-  Settings = Window:AddTab({Title = "Cài Đặt", Icon = "rbxassetid://7734053495"}),
-  Main = Window:AddTab({Title = "Cày", Icon = "home"}),
-  Melee = Window:AddTab({Title = "Võ Thuật", Icon = "rbxassetid://11162889532"}),
-  Quests = Window:AddTab({Title = "Vật Phẩm Cày", Icon = "rbxassetid://13075622619"}),
-  SeaEvent = Window:AddTab({Title = "Biển", Icon = "rbxassetid://10709783577"}),
-  Mirage = Window:AddTab({Title = "Đảo Bí Ẩn/V4", Icon = "rbxassetid://11162889532"}),
-  Drago = Window:AddTab({Title = "Võ Đường Drago", Icon = "layers"}),
-  Prehistoric = Window:AddTab({Title = "Núi Lửa", Icon = "flame"}),
-  Raids = Window:AddTab({Title = "Đột Kích", Icon = "skull"}),
-  Travel = Window:AddTab({Title = "Dịch Chuyển", Icon = "map-pin"}),
-  Fruit = Window:AddTab({Title = "Trái", Icon = "cherry"}),
-  Misc = Window:AddTab({Title = "Linh Tinh", Icon = "rbxassetid://6031280882"})
+  Shop = Window:AddTab({Title = "Loja", Icon = "shopping-cart"}),
+  Combat = Window:AddTab({Title = "Status do Servidor", Icon = "user"}),
+  Settings = Window:AddTab({Title = "Configuração", Icon = "rbxassetid://7734053495"}),
+  Main = Window:AddTab({Title = "Aba Principal", Icon = "home"}),
+  Melee = Window:AddTab({Title = "Estilos de Luta", Icon = "rbxassetid://11162889532"}),
+  Quests = Window:AddTab({Title = "Itens & Acessorios", Icon = "rbxassetid://13075622619"}),
+  SeaEvent = Window:AddTab({Title = "Eventos do Mar", Icon = "rbxassetid://10709783577"}),
+  Mirage = Window:AddTab({Title = "Lua & Trial", Icon = "rbxassetid://11162889532"}),
+  Drago = Window:AddTab({Title = "Raça Draco", Icon = "layers"}),
+  Prehistoric = Window:AddTab({Title = "Ilha do Vulção", Icon = "flame"}),
+  Raids = Window:AddTab({Title = "Dugeon & Raid", Icon = "skull"}),
+  Travel = Window:AddTab({Title = "Teleporte", Icon = "map-pin"}),
+  Fruit = Window:AddTab({Title = "Frutas", Icon = "cherry"}),
+  Misc = Window:AddTab({Title = "Servidor", Icon = "rbxassetid://6031280882"})
 }
  
 local FarmLevel = Tabs.Main:AddToggle("FarmLevel", {Title = "Auto Farm Level", Description = "", Default = false})
