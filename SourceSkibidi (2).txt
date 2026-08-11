@@ -1,5 +1,5 @@
 --[[
-    Anime Mob Hub - Optimized Version
+    Dum Hub - Optimized Version
     Performance & Code Quality Improvements
 ]]
 
@@ -16,7 +16,7 @@ local function NotificacaoNightMystic(titulo, mensagem)
     local success = pcall(function()
         local TweenService = Services.TweenService
         local CoreGui = Services.CoreGui
-        local LogoID = "rbxassetid://78306014282581"
+        local LogoID = "rbxassetid://88302329194799"
 
         local ScreenGui = Instance.new("ScreenGui")
         ScreenGui.Name = "NM_Notify"
@@ -36,7 +36,7 @@ local function NotificacaoNightMystic(titulo, mensagem)
         
         local UIStroke = Instance.new("UIStroke")
         UIStroke.Parent = Frame
-        UIStroke.Color = Color3.fromRGB(255, 215, 0)
+        UIStroke.Color = Color3.fromRGB(45, 45, 45)
         UIStroke.Thickness = 1
 
         local Logo = Instance.new("ImageLabel")
@@ -93,23 +93,17 @@ local function NotificacaoNightMystic(titulo, mensagem)
     end)
     
     if not success then
-        warn("[Anime Mob] Erro ao exibir notificação")
+        warn("[Dum] Erro ao exibir notificação")
     end
 end
 
-NotificacaoNightMystic("Anime Mob Hub", "Script carregado com sucesso!")
-
--- Garante que o jogo carregou antes de procurar remotes/character.
--- Isso evita o bug onde só a notificação aparece e a UI nunca abre.
-if not game:IsLoaded() then
-    game.Loaded:Wait()
-end
+NotificacaoNightMystic("Dum Hub", "Script carregado com sucesso!")
 
 -- ========================================
 -- SAVE SYSTEM (Optimized)
 -- ========================================
 local HttpService = Services.HttpService
-local FolderName = "Anime Mob Hub"
+local FolderName = "Dum Hub"
 local FileName = "Settings.json"
 local FullPath = FolderName .. "/" .. FileName
 
@@ -155,9 +149,7 @@ local CollectionService = Services.CollectionService
 local ReplicatedStorage = Services.ReplicatedStorage
 
 local player = Players.LocalPlayer
-local remotesFolder = ReplicatedStorage:WaitForChild("Remotes", 30)
-local commE = remotesFolder and remotesFolder:WaitForChild("CommE", 30)
-local commF = remotesFolder and remotesFolder:WaitForChild("CommF_", 30)
+local commE = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommE")
 
 _G.AutoKen = true
 
@@ -166,27 +158,25 @@ local function HasKen()
     return char and CollectionService:HasTag(char, "Ken")
 end
 
-if commE then
-    task.spawn(function()
-        while _G.AutoKen do
-            task.wait(0.2)
-            if not HasKen() then
-                pcall(function()
-                    commE:FireServer("Ken", true)
-                end)
-            end
+task.spawn(function()
+    while _G.AutoKen do
+        task.wait(0.2)
+        if not HasKen() then
+            pcall(function()
+                commE:FireServer("Ken", true)
+            end)
         end
-    end)
-end
+    end
+end)
 
 -- ========================================
 -- AUTO TEAM & LIGHTING
 -- ========================================
 local desiredTeam = "Marines"
 
-if commF and (not player.Team or player.Team.Name ~= desiredTeam) then
+if not player.Team or player.Team.Name ~= desiredTeam then
     pcall(function()
-        commF:InvokeServer("SetTeam", desiredTeam)
+        ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", desiredTeam)
     end)
 end
 
@@ -202,45 +192,29 @@ Lighting.FogEnd = 1e10
 -- ========================================
 -- GLOBAL VARIABLES (Cached & Organized)
 -- ========================================
--- Wait for game and character before initializing globals
-ply = Services.Players
-plr = ply.LocalPlayer
-
-if not game:IsLoaded() then game.Loaded:Wait() end
-
-repeat
-    local loading = plr:FindFirstChild("PlayerGui") and plr.PlayerGui:FindFirstChild("Main")
-    loading = loading and loading:FindFirstChild("Loading")
-    if not (loading and loading.Visible) then break end
-    task.wait(0.1)
-until false
-
-local character = plr.Character or plr.CharacterAdded:Wait()
-character:WaitForChild("HumanoidRootPart", 30)
-character:WaitForChild("Energy", 30)
-plr:WaitForChild("Data", 30)
-
 do
-    Root = character:FindFirstChild("HumanoidRootPart")
+    ply = Services.Players
+    plr = ply.LocalPlayer
+    Root = plr.Character.HumanoidRootPart
     replicated = Services.ReplicatedStorage
-    Lv = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Level") and plr.Data.Level.Value) or 0
+    Lv = plr.Data.Level.Value
     TeleportService = Services.TeleportService
     TW = Services.TweenService
     Lighting = Services.Lighting
-    Enemies = workspace:FindFirstChild("Enemies") or workspace:WaitForChild("Enemies", 10)
+    Enemies = workspace.Enemies
     vim1 = Services.VirtualInputManager
     vim2 = Services.VirtualUser
     TeamSelf = plr.Team
     RunSer = Services.RunService
     Stats = Services.Stats
-    Energy = (character:FindFirstChild("Energy") and character.Energy.Value) or 0
-
+    Energy = plr.Character.Energy.Value
+    
     -- Tables
     Boss = {}
     BringConnections = {}
     MaterialList = {}
     NPCList = {}
-
+    
     -- Flags
     shouldTween = false
     SoulGuitar = false
@@ -253,6 +227,13 @@ do
     ClickState = 0
     Num_self = 25
 end
+
+-- Wait for game to load
+repeat
+    local loading = plr.PlayerGui:FindFirstChild("Main")
+    loading = loading and loading:FindFirstChild("Loading")
+    task.wait()
+until game:IsLoaded() and not (loading and loading.Visible)
 -- World Detection (Optimized)
 local placeId = game.PlaceId
 if placeId == 2753915549 or placeId == 85211729168715 then
@@ -444,36 +425,32 @@ weaponSc = function(I)
 			end;
 		end;
 	end;
-pcall(function()
-    if hookfunction then
-        pcall(function()
-            hookfunction(require((game:GetService("ReplicatedStorage")).Effect.Container.Death), function() end)
-        end)
-        pcall(function()
-            local guideModule = game:GetService("ReplicatedStorage"):WaitForChild("GuideModule", 10)
-            if guideModule then hookfunction(require(guideModule).ChangeDisplayedNPC, function() end) end
-        end)
-        pcall(function() hookfunction(error, function() end) end)
-        pcall(function() hookfunction(warn, function() end) end)
-    end
+hookfunction(require((game:GetService("ReplicatedStorage")).Effect.Container.Death), function()
+ 
+end);
+hookfunction((require((game:GetService("ReplicatedStorage")):WaitForChild("GuideModule"))).ChangeDisplayedNPC, function()
+ 
+end);
+hookfunction(error, function()
+ 
+end);
+hookfunction(warn, function()
+ 
 end);
 local O = workspace:FindFirstChild("Rocks");
 if O then
 	O:Destroy();
 end;
 gay = (function()
-    pcall(function()
-        local I = game:GetService("Lighting");
-        local e = I:FindFirstChild("LightingLayers");
+    local I = game:GetService("Lighting");
+    local e = I:FindFirstChild("LightingLayers");
 
-        -- NÃO remover DarkFog
+    -- NÃO remover DarkFog
 
-        local worldOrigin = workspace:FindFirstChild("_WorldOrigin");
-        local K = worldOrigin and worldOrigin:FindFirstChild("Foam;");
-        if K then
-            K:Destroy();
-        end;
-    end)
+    local K = workspace._WorldOrigin["Foam;"];
+    if K and workspace._WorldOrigin["Foam;"] then
+        K:Destroy();
+    end;
 end)();
 
 local G = {};
@@ -881,28 +858,24 @@ Useskills = function(I, e)
 			vim1:SendKeyEvent(false, "Y", false, game);
 		end;
 	end;
-pcall(function()
-    if getrawmetatable and setreadonly and newcclosure and getnamecallmethod then
-        local J = getrawmetatable(game);
-        local i = J.__namecall;
-        setreadonly(J, false);
-        J.__namecall = newcclosure(function(...)
-            local I = getnamecallmethod();
-            local e = { ... };
-            if tostring(I) == "FireServer" then
-                if tostring(e[1]) == "RemoteEvent" then
-                    if tostring(e[2]) ~= "true" and tostring(e[2]) ~= "false" then
-                        if _G.FarmMastery_G and not SoulGuitar or _G.FarmMastery_Dev or _G.FarmBlazeEM or _G.Prehis_Skills or _G.SeaBeast1 or _G.FishBoat or _G.PGB or _G.Leviathan1 or _G.Complete_Trials or _G.AimMethod and ABmethod == "AimBots Skill" or _G.AimMethod and ABmethod == "Auto Aimbots" then
-                            e[2] = MousePos;
-                            return i(unpack(e));
-                        end;
-                    end;
-                end;
-            end;
-            return i(...);
-        end);
-    end
-end);
+local J = getrawmetatable(game);
+local i = J.__namecall;
+setreadonly(J, false);
+J.__namecall = newcclosure(function(...)
+		local I = getnamecallmethod();
+		local e = { ... };
+		if tostring(I) == "FireServer" then
+			if tostring(e[1]) == "RemoteEvent" then
+				if tostring(e[2]) ~= "true" and tostring(e[2]) ~= "false" then
+					if _G.FarmMastery_G and not SoulGuitar or _G.FarmMastery_Dev or _G.FarmBlazeEM or _G.Prehis_Skills or _G.SeaBeast1 or _G.FishBoat or _G.PGB or _G.Leviathan1 or _G.Complete_Trials or _G.AimMethod and ABmethod == "AimBots Skill" or _G.AimMethod and ABmethod == "Auto Aimbots" then
+						e[2] = MousePos;
+						return i(unpack(e));
+					end;
+				end;
+			end;
+		end;
+		return i(...);
+	end);
 GetConnectionEnemies = function(I)
 		for e, K in pairs(replicated:GetChildren()) do
 			if K:IsA("Model") and ((typeof(I) == "table" and table.find(I, K.Name) or K.Name == I) and (K:FindFirstChild("Humanoid") and K.Humanoid.Health > 0)) then
@@ -2422,54 +2395,21 @@ QuestNeta = function()
 			[6] = PosQ,
 		};
 	end;
-	local function LoadAnimeMobUILibrary()
-    local urls = {
-        "https://raw.githubusercontent.com/PlockScripts/Library-ui/refs/heads/main/Redzhubui",
-        "https://raw.githubusercontent.com/PlockScripts/Library-ui/main/Redzhubui",
-    }
-
-    for _, url in ipairs(urls) do
-        local okSource, source = pcall(function()
-            return game:HttpGet(url)
-        end)
-
-        if okSource and type(source) == "string" and #source > 1000 then
-            local loader, loadErr = loadstring(source)
-            if loader then
-                local okLib, lib = pcall(loader)
-                if okLib and lib and type(lib.MakeWindow) == "function" then
-                    return lib
-                end
-            else
-                warn("[Anime Mob Hub] Erro loadstring UI:", loadErr)
-            end
-        end
-    end
-
-    error("[Anime Mob Hub] Não foi possível carregar a biblioteca da UI.")
-end
-
-	local Library = LoadAnimeMobUILibrary():MakeWindow({
-    Title = "Anime Mob Hub",
-    SubTitle = "by Rafael and animewaze",
-    SaveFolder = "anime_mob_hub.json"
+	local Library = loadstring(game:HttpGet("https://pastefy.app/aeSxAKAD/raw"))():MakeWindow({
+    Title = "Dum Hub",
+    SubTitle = "by Dumdz",
+    SaveFolder = "VNVD"
 })
 -- Criar ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ControlGUI"
-screenGui.ResetOnSpawn = false
-pcall(function()
-    screenGui.Parent = game:GetService("CoreGui")
-end)
-if not screenGui.Parent then
-    screenGui.Parent = plr:WaitForChild("PlayerGui")
-end
+screenGui.Parent = game.CoreGui
 
 -- Criar ImageButton
 local imageButton = Instance.new("ImageButton")
 imageButton.Size = UDim2.new(0, 50, 0, 50)
 imageButton.Position = UDim2.new(0.15, 0, 0.15, 0)
-imageButton.Image = "rbxassetid://78306014282581"
+imageButton.Image = "rbxassetid://88302329194799"
 imageButton.BackgroundTransparency = 1
 imageButton.Parent = screenGui
 
@@ -2482,7 +2422,7 @@ uiCorner.Parent = imageButton
 local uiStroke = Instance.new("UIStroke", imageButton)
 uiStroke.Thickness = 2
 uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-uiStroke.Color = Color3.fromRGB(255, 215, 0) -- Magenta/Rosa forte
+uiStroke.Color = Color3.fromRGB(255, 200, 40) -- Magenta/Rosa forte
 
 -- Variáveis para arrastar
 local dragging = false
@@ -2541,90 +2481,90 @@ imageButton.MouseButton1Click:Connect(function()
     end
 end)
 local Discord = Library:MakeTab({
-    Title = "Discord",
-    Icon = "rbxassetid://73132811772878"
+    Title = "Info",
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Status = Library:MakeTab({
     Title = "Status And Server",
-    Icon = "rbxassetid://7040410130"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Shop = Library:MakeTab({
     Title = "Shop",
-    Icon = "rbxassetid://6031265976"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Farm = Library:MakeTab({
     Title = "Tab Farming",
-    Icon = "rbxassetid://127561653320876"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Maestry = Library:MakeTab({
     Title = "Tab Farm Maestry",
-    Icon = "rbxassetid://10709782497"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Others = Library:MakeTab({
     Title = "Tab Farm Others",
-    Icon = "rbxassetid://10723405360"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Event = Library:MakeTab({
     Title = "Tab Sea Event",
-    Icon = "rbxassetid://10709783577"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Race = Library:MakeTab({
     Title = "Tab Race Upgrade",
-    Icon = "rbxassetid://115164375298022"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Dojo = Library:MakeTab({
     Title = "Tab Dojo Quest & Drago Race",
-    Icon = "rbxassetid://91920478152016"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Esp = Library:MakeTab({
     Title = "Tab Stats & ESP",
-    Icon = "rbxassetid://11155851001"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Player = Library:MakeTab({
     Title = "Tab Local Player",
-    Icon = "rbxassetid://13075651575"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Teleport = Library:MakeTab({
     Title = "Tab Teleport",
-    Icon = "rbxassetid://10734886004"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Get = Library:MakeTab({
     Title = "Tab Get Items & Upgrade",
-    Icon = "rbxassetid://13075622619"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Fruit = Library:MakeTab({
     Title = "Tab Raid & Fruit",
-    Icon = "rbxassetid://11155986081"
+    Icon = "rbxassetid://88302329194799"
 })
 
 local Setting = Library:MakeTab({
     Title = "Tab Settings & Misc",
-    Icon = "rbxassetid://7734053495"
+    Icon = "rbxassetid://88302329194799"
 })
 Discord:AddDiscordInvite({
-    Name = "Anime Mob Hub",
-    Description = "Join for support and updates",
-    Logo = "rbxassetid://78306014282581",
-    Invite = "https://discord.gg/Wk6rS8pZ3"
+    Name = "Dum Hub",
+    Description = "YouTube",
+    Logo = "rbxassetid://88302329194799",
+    Invite = "https://youtube.com/@dumhubroblox?si=mvuzgBxnW1RFVh36"
 })
 local credits = Discord:AddParagraph({
     Title = "Credits For Someone Peoples",
     Desc = ""
 })
-credits:SetDesc("Creator: Rafael and animewaze")
+credits:SetDesc("nigth mystic, astral, tboy kiddo etc")
 
 Shop:AddSection("Fighting Shop")
 Shop:AddButton({
@@ -3225,7 +3165,7 @@ Status:AddButton({
         TPS:TeleportToPlaceInstance(_place, Server.id, plr)
     end
 })
-Farm:AddSection("Auto Farm main")
+Farm:AddSection({"Auto Farm main"})
 Farm:AddDropdown({
     Name = "Select Weapon",
     Description = "",
@@ -3821,7 +3761,7 @@ spawn(function()
         end  
     end
 end)
-Farm:AddSection("Other")
+Farm:AddSection({"Other"})
 -- Configuração da Distância Máxima (em studs)
 -- Aumente se quiser pegar mobs um pouco mais longe, diminua se quiser bem perto.
 _G.MaxFarmDistance = 325
@@ -4030,7 +3970,7 @@ spawn(function()
     end
 end)
 end
-Farm:AddSection("Collect")
+Farm:AddSection({"Collect"})
 -- Botão Auto Collect Chest
 Farm:AddToggle({
     Name = "Auto Collect Chest",
@@ -4120,7 +4060,7 @@ spawn(function()
         end
     end
 end)
-Farm:AddSection("Material")
+Farm:AddSection({"Material"})
 -- Dropdown de Selecionar Material
 Farm:AddDropdown({
 	Name = "Select Material",
@@ -4194,7 +4134,7 @@ spawn(function()
 end);
 
 if World3 then
-Farm:AddSection("Bones")
+Farm:AddSection({"Bones"})
 -- AUTO RANDOM BONES
 Farm:AddToggle({
     Name = "Auto Random Bone",
@@ -4253,7 +4193,7 @@ spawn(function()
 end)
 end
 if World3 then
-Farm:AddSection("Dark Dragger + Valkyrie")
+Farm:AddSection({"Dark Dragger + Valkyrie"})
 Farm:AddToggle({
     Name = "Auto Kill Rip Indra",
     Description = "",
@@ -4356,7 +4296,7 @@ Setting:AddButton({
             
             -- Notificação Universal (Funciona sem a lib Fluent)
             game.StarterGui:SetCore("SendNotification", {
-                Title = "Anime Mob Hub",
+                Title = "Dum Hub",
                 Text = "Configurações salvas com sucesso!",
                 Duration = 5
             })
@@ -4377,13 +4317,13 @@ Setting:AddButton({
             
             -- Notificação Universal
             game.StarterGui:SetCore("SendNotification", {
-                Title = "Anime Mob Hub",
+                Title = "Dum Hub",
                 Text = "Configurações resetadas! Re-execute o script.",
                 Duration = 5
             })
         else
             game.StarterGui:SetCore("SendNotification", {
-                Title = "Anime Mob Hub",
+                Title = "Dum Hub",
                 Text = "Nenhum arquivo de save encontrado para apagar.",
                 Duration = 3
             })
@@ -4663,7 +4603,7 @@ local ToolAbilities = Net:WaitForChild("RF/JobToolAbilities")
 -- =========================================================
 -- CONFIGURAÇÃO DA NOTIFICAÇÃO CUSTOMIZADA (FULL BLACK)
 -- =========================================================
-local LogoID = "rbxassetid://78306014282581"
+local LogoID = "rbxassetid://88302329194799"
 
 local function NotifyNightMystic(texto)
     task.spawn(function()
@@ -4685,7 +4625,7 @@ local function NotifyNightMystic(texto)
 
         local stroke = Instance.new("UIStroke")
         stroke.Parent = frame
-        stroke.Color = Color3.fromRGB(255, 215, 0)
+        stroke.Color = Color3.fromRGB(50, 50, 50)
         stroke.Thickness = 1
         
         local corner = Instance.new("UICorner")
@@ -12171,6 +12111,6 @@ end)
 _ENV.rz_FastAttack = FastAttack
 FastAttackModule.FastAttack = FastAttack
 
-NotificacaoNightMystic("Anime Mob Hub", "✅ Todos os sistemas carregados!")
+NotificacaoNightMystic("Dum Hub", "✅ Todos os sistemas carregados!")
 
 return FastAttackModulem
