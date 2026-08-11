@@ -143,12 +143,13 @@ Attack.KillSea = function(model,Succes)
   local PlayerHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 local LowHealth = PlayerHumanoid
     and PlayerHumanoid.MaxHealth > 0
-    and (PlayerHumanoid.Health / PlayerHumanoid.MaxHealth) <= 0.30
+    and (PlayerHumanoid.Health / PlayerHumanoid.MaxHealth) <= 0.40
 
 if LowHealth then
-    -- Proteção do Terror Shark: sobe apenas um pouco quando a vida estiver baixa.
-    notween(model.HumanoidRootPart.CFrame * CFrame.new(0,35,12))
-    wait(0.35)
+    -- Proteção do Terror Shark: fica afastado enquanto a vida estiver baixa.
+    -- O retorno só acontece depois que a vida subir novamente.
+    notween(model.HumanoidRootPart.CFrame * CFrame.new(0,45,18))
+    wait(0.50)
 elseif ToolTip == "Blox Fruit" then
     _tp(model.HumanoidRootPart.CFrame * CFrame.new(0,10,0) * CFrame.Angles(0,math.rad(90),0))
 else
