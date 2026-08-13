@@ -3715,6 +3715,22 @@ spawn(function()
     end
   end
 end)
+local Q = Tabs.Quests:AddToggle("Q", {Title = "Auto Stone", Description = "", Default = false})
+Q:OnChanged(function(Value)
+  _G.AutoKilo = Value
+end)
+spawn(function()
+  while wait(.2) do
+    if _G.AutoKilo then
+      pcall(function()
+        local v = GetConnectionEnemies("Stone")
+        if v then repeat task.wait()Attack.Kill(v,_G.AutoKilo)until not _G.AutoKilo or not v.Parent or v.Humanoid.Health <= 0
+        else _tp(CFrame.new(-1195.94, 105.23, 6906.27))
+        end
+      end)
+    end
+  end
+end)
 
 Tabs.Mirage:AddSection("Mystic Island / Full Moon")
 FullMOOn = Tabs.Mirage:AddParagraph({Title = " FullMoon Status ",Content = ""})
