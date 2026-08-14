@@ -4230,6 +4230,38 @@ Tabs.Mirage:AddButton({
         local Character = Player.Character or Player.CharacterAdded:Wait()
         local Root = Character:WaitForChild("HumanoidRootPart")
 
+        -- Localização do Mysterious Force
+        local MysteriousForce = workspace.NPCs:FindFirstChild("Mysterious Force")
+
+        if MysteriousForce then
+            local NPC_Root = MysteriousForce:FindFirstChild("Humanoid RootPart")
+
+            if NPC_Root then
+                -- Vai até o Mysterious Force
+                Root.CFrame = NPC_Root.CFrame * CFrame.new(0, 0, 3)
+
+                task.wait(1)
+
+                -- Procura o diálogo
+                local Dialogue = Player.PlayerGui.Main:FindFirstChild("Dialogue")
+
+                if Dialogue then
+                    local Option1 = Dialogue:FindFirstChild("Option1")
+
+                    if Option1 then
+                        -- "Use it"
+                        Option1:Activate()
+
+                        task.wait(1)
+
+                        print("Mysterious Force: Use it ativado")
+                        return
+                    end
+                end
+            end
+        end
+
+        -- Fallback: teleporte direto
         local Position = Vector3.new(
             28286.56,
             14933.21,
