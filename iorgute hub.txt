@@ -4222,7 +4222,7 @@ spawn(function()
 end)
 Tabs.Mirage:AddButton({Title = "Teleporte Pro Temple of Time", Description = "",
 Callback = function()
-  game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance",Vector3.new(28286.35546875, 14895.3017578125, 102.62469482421875))
+  game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance",Vector3.new(28286.35546875, 14896.57, 102.62))
 end})
 Tabs.Mirage:AddButton({Title = "Teleporte Pro Ancient One", Description = "",
 Callback = function()
