@@ -4403,17 +4403,126 @@ spawn(function()
   end
 end)
 spawn(function()
-  while wait(.1) do   
-    pcall(function()
-      if _G.Complete_Trials then
-	    if tostring(plr.Data.Race.Value) == "Human" or tostring(plr.Data.Race.Value) == "Ghoul" then	      
-	      local TrialsTables = {"Ancient Vampire","Ancient Zombie"}
-	      local v = GetConnectionEnemies(TrialsTables)
-          if v then repeat wait() Attack.Kill(v, _G.Complete_Trials)until _G.Complete_Trials == false or not v.Parent or v.Humanoid.Health <= 0 end		
-        end
-      end
-    end)
-  end
+    while wait(0.1) do
+        pcall(function()
+
+            if not _G.Complete_Trials then
+                return
+            end
+
+            local race = tostring(plr.Data.Race.Value)
+
+            -- HUMAN
+            if race == "Human" then
+
+                local HumanTrialBosses = {
+                    "Flame Master",
+                    "Quake Master",
+                    "Light Master",
+                    "Dark Master",
+                    "Rumble Master"
+                }
+
+                local character = plr.Character
+                local root = character and character:FindFirstChild("HumanoidRootPart")
+
+                if not root then
+                    return
+                end
+
+                local closestBoss = nil
+                local closestDistance = math.huge
+
+                for _, obj in ipairs(workspace:GetDescendants()) do
+
+                    if obj:IsA("Model")
+                    and table.find(HumanTrialBosses, obj.Name) then
+
+                        local humanoid = obj:FindFirstChildOfClass("Humanoid")
+                        local bossRoot = obj:FindFirstChild("HumanoidRootPart")
+
+                        if humanoid
+                        and bossRoot
+                        and humanoid.Health > 0 then
+
+                            local distance =
+                                (root.Position - bossRoot.Position).Magnitude
+
+                            if distance < closestDistance then
+                                closestDistance = distance
+                                closestBoss = obj
+                            end
+                        end
+                    end
+                end
+
+                if closestBoss then
+
+                    repeat
+                        task.wait()
+
+                        if not closestBoss.Parent then
+                            break
+                        end
+
+                        local humanoid =
+                            closestBoss:FindFirstChildOfClass("Humanoid")
+
+                        if not humanoid or humanoid.Health <= 0 then
+                            break
+                        end
+
+                        Attack.Kill(
+                            closestBoss,
+                            _G.Complete_Trials
+                        )
+
+                    until not _G.Complete_Trials
+                    or not closestBoss.Parent
+                    or not closestBoss:FindFirstChildOfClass("Humanoid")
+                    or closestBoss:FindFirstChildOfClass("Humanoid").Health <= 0
+                end
+
+            -- GHOUL
+            elseif race == "Ghoul" then
+
+                local TrialsTables = {
+                    "Ancient Vampire",
+                    "Ancient Zombie"
+                }
+
+                local v = GetConnectionEnemies(TrialsTables)
+
+                if v then
+
+                    repeat
+                        task.wait()
+
+                        if not v.Parent then
+                            break
+                        end
+
+                        local humanoid =
+                            v:FindFirstChildOfClass("Humanoid")
+
+                        if not humanoid or humanoid.Health <= 0 then
+                            break
+                        end
+
+                        Attack.Kill(
+                            v,
+                            _G.Complete_Trials
+                        )
+
+                    until not _G.Complete_Trials
+                    or not v.Parent
+                    or not v:FindFirstChildOfClass("Humanoid")
+                    or v:FindFirstChildOfClass("Humanoid").Health <= 0
+                end
+            end
+
+        end)
+    end
 end)
 local Q = Tabs.Mirage:AddToggle("Q", {Title = "Auto Kill Player After Trial", Description = "turn on for kill player after the race trials", Default = false})
 Q:OnChanged(function(Value)
