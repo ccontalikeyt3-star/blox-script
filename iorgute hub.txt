@@ -4388,111 +4388,71 @@ spawn(function()
     end
 end)
 spawn(function()
-
-    local SharkTrialPosition = Vector3.new(
-        25029.6035,
-        -0.2854,
-        12145.4637
-    )
-
-    local SharkTrialRadius = 500
-
-    local function IsInSharkTrial()
-        local character = plr.Character
-        local hrp = character and character:FindFirstChild("HumanoidRootPart")
-
-        if not hrp then
-            return false
+    while task.wait(0.5) do
+        if not _G.Complete_Trials then
+            continue
         end
 
-        local distance = (hrp.Position - SharkTrialPosition).Magnitude
-
-        return distance <= SharkTrialRadius
-    end
-
-    while task.wait(Sec) do
         pcall(function()
-
-            if not _G.Complete_Trials then
-                return
-            end
 
             local race = tostring(plr.Data.Race.Value)
 
-            -- Compatibilidade com os dois nomes
             if race ~= "Shark" and race ~= "Fishman" then
                 return
             end
 
-            -- O jogo precisa ter colocado VOCÊ na região
-            -- da sua Shark Trial.
-            if not IsInSharkTrial() then
+            local character = plr.Character
+            local hrp = character and character:FindFirstChild("HumanoidRootPart")
+
+            if not hrp then
+                return
+            end
+
+            local TrialPosition = Vector3.new(
+                25029.6035,
+                -0.2854,
+                12145.4637
+            )
+
+            local distance = (hrp.Position - TrialPosition).Magnitude
+
+            if distance > 500 then
                 return
             end
 
             local SeaBeast = GetSeaBeastTrial()
 
-            if SeaBeast then
-
-                print("[Race V4] Shark Trial detectada!")
-                print("[Race V4] Sea Beast:", SeaBeast.Name)
-
-                repeat
-                    task.wait()
-
-                    if not _G.Complete_Trials then
-                        break
-                    end
-
-                    if not SeaBeast.Parent then
-                        break
-                    end
-
-                    local humanoid =
-                        SeaBeast:FindFirstChildOfClass("Humanoid")
-
-                    local root =
-                        SeaBeast:FindFirstChild("HumanoidRootPart")
-
-                    if not humanoid or humanoid.Health <= 0 or not root then
-                        break
-                    end
-
-                    MousePos = root.Position
-
-                    spawn(function()
-                        _tp(CFrame.new(
-                            root.Position.X,
-                            workspace.Map["WaterBase-Plane"].Position.Y + 300,
-                            root.Position.Z
-                        ))
-                    end)
-
-                    Useskills("Melee", "Z")
-                    Useskills("Melee", "X")
-                    Useskills("Melee", "C")
-
-                    task.wait(0.1)
-
-                    Useskills("Sword", "Z")
-                    Useskills("Sword", "X")
-
-                    task.wait(0.1)
-
-                    Useskills("Blox Fruit", "Z")
-                    Useskills("Blox Fruit", "X")
-                    Useskills("Blox Fruit", "C")
-
-                    task.wait(0.1)
-
-                    Useskills("Gun", "Z")
-                    Useskills("Gun", "X")
-
-                until not _G.Complete_Trials
-                    or not SeaBeast.Parent
-                    or not SeaBeast:FindFirstChildOfClass("Humanoid")
-                    or SeaBeast:FindFirstChildOfClass("Humanoid").Health <= 0
+            if not SeaBeast then
+                print("[Race V4] Shark: Sea Beast não encontrada.")
+                return
             end
+
+            local beastRoot = SeaBeast:FindFirstChild("HumanoidRootPart")
+
+            if not beastRoot then
+                print("[Race V4] Shark: SeaBeast sem HumanoidRootPart.")
+                return
+            end
+
+            print("================================")
+            print("[Race V4] SHARK TEST")
+            print("Boss:", SeaBeast.Name)
+            print("Boss Position:", beastRoot.Position)
+            print("Player Position:", hrp.Position)
+            print("Distance:", (hrp.Position - beastRoot.Position).Magnitude)
+            print("Chamando _tp...")
+            print("================================")
+
+            MousePos = beastRoot.Position
+
+            _tp(CFrame.new(
+                beastRoot.Position.X,
+                workspace.Map["WaterBase-Plane"].Position.Y + 300,
+                beastRoot.Position.Z
+            ))
+
+            print("[Race V4] _tp executado.")
+
         end)
     end
 end)
@@ -4531,7 +4491,7 @@ spawn(function()
         "Flame Master",
         "Quake Master",
         "Light Master",
-        "Dark Master",
+        "Darkness Master",
         "Rumble Master"
     }
 
