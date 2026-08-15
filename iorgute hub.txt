@@ -4403,7 +4403,71 @@ spawn(function()
   end
 end)
 spawn(function()
-    while wait(0.1) do
+    local HumanTrialPosition = Vector3.new(
+        10107.41,
+        10019.90,
+        151.35
+    )
+
+    local HumanTrialRadius = 300
+
+    local HumanTrialBosses = {
+        "Flame Master",
+        "Quake Master",
+        "Light Master",
+        "Dark Master",
+        "Rumble Master"
+    }
+
+    local function IsInHumanTrial()
+        local character = plr.Character
+        local root = character and character:FindFirstChild("HumanoidRootPart")
+
+        if not root then
+            return false
+        end
+
+        return (root.Position - HumanTrialPosition).Magnitude <= HumanTrialRadius
+    end
+
+    local function GetHumanTrialBoss()
+        local character = plr.Character
+        local root = character and character:FindFirstChild("HumanoidRootPart")
+
+        if not root then
+            return nil
+        end
+
+        local closestBoss = nil
+        local closestDistance = math.huge
+
+        for _, obj in ipairs(workspace:GetDescendants()) do
+
+            if obj:IsA("Model")
+            and table.find(HumanTrialBosses, obj.Name) then
+
+                local humanoid = obj:FindFirstChildOfClass("Humanoid")
+                local bossRoot = obj:FindFirstChild("HumanoidRootPart")
+
+                if humanoid
+                and bossRoot
+                and humanoid.Health > 0 then
+
+                    local distance =
+                        (root.Position - bossRoot.Position).Magnitude
+
+                    if distance < closestDistance then
+                        closestDistance = distance
+                        closestBoss = obj
+                    end
+                end
+            end
+        end
+
+        return closestBoss
+    end
+
+    while task.wait(0.1) do
         pcall(function()
 
             if not _G.Complete_Trials then
@@ -4412,78 +4476,68 @@ spawn(function()
 
             local race = tostring(plr.Data.Race.Value)
 
-            -- HUMAN
+            --==================================================
+            -- HUMAN - TRIAL OF STRENGTH
+            --==================================================
+
             if race == "Human" then
 
-                local HumanTrialBosses = {
-                    "Flame Master",
-                    "Quake Master",
-                    "Light Master",
-                    "Dark Master",
-                    "Rumble Master"
-                }
+                -- NÃO TELEPORTA.
+                -- Apenas verifica se o jogo já nos colocou na Trial.
 
-                local character = plr.Character
-                local root = character and character:FindFirstChild("HumanoidRootPart")
-
-                if not root then
+                if not IsInHumanTrial() then
                     return
                 end
 
-                local closestBoss = nil
-                local closestDistance = math.huge
+                -- Só procura o boss depois que estivermos
+                -- realmente dentro da região da Trial.
+                local boss = GetHumanTrialBoss()
 
-                for _, obj in ipairs(workspace:GetDescendants()) do
+                if not boss then
+                    return
+                end
 
-                    if obj:IsA("Model")
-                    and table.find(HumanTrialBosses, obj.Name) then
+                print("[Race V4] Human Trial Boss:", boss.Name)
 
-                        local humanoid = obj:FindFirstChildOfClass("Humanoid")
-                        local bossRoot = obj:FindFirstChild("HumanoidRootPart")
+                local humanoid = boss:FindFirstChildOfClass("Humanoid")
 
-                        if humanoid
-                        and bossRoot
-                        and humanoid.Health > 0 then
+                if not humanoid then
+                    return
+                end
 
-                            local distance =
-                                (root.Position - bossRoot.Position).Magnitude
+                -- Ataca somente o boss encontrado.
+                repeat
+                    task.wait()
 
-                            if distance < closestDistance then
-                                closestDistance = distance
-                                closestBoss = obj
-                            end
-                        end
+                    if not _G.Complete_Trials then
+                        break
                     end
-                end
 
-                if closestBoss then
+                    if not boss.Parent then
+                        break
+                    end
 
-                    repeat
-                        task.wait()
+                    humanoid = boss:FindFirstChildOfClass("Humanoid")
 
-                        if not closestBoss.Parent then
-                            break
-                        end
+                    if not humanoid or humanoid.Health <= 0 then
+                        break
+                    end
 
-                        local humanoid =
-                            closestBoss:FindFirstChildOfClass("Humanoid")
+                    Attack.Kill(
+                        boss,
+                        _G.Complete_Trials
+                    )
 
-                        if not humanoid or humanoid.Health <= 0 then
-                            break
-                        end
+                until not _G.Complete_Trials
+                    or not boss.Parent
+                    or not boss:FindFirstChildOfClass("Humanoid")
+                    or boss:FindFirstChildOfClass("Humanoid").Health <= 0
 
-                        Attack.Kill(
-                            closestBoss,
-                            _G.Complete_Trials
-                        )
 
-                    until not _G.Complete_Trials
-                    or not closestBoss.Parent
-                    or not closestBoss:FindFirstChildOfClass("Humanoid")
-                    or closestBoss:FindFirstChildOfClass("Humanoid").Health <= 0
-                end
+            --==================================================
+            -- GHOUL - TRIAL OF CARNAGE
+            --==================================================
 
-            -- GHOUL
             elseif race == "Ghoul" then
 
                 local TrialsTables = {
@@ -4497,6 +4551,10 @@ spawn(function()
 
                     repeat
                         task.wait()
+
+                        if not _G.Complete_Trials then
+                            break
+                        end
 
                         if not v.Parent then
                             break
@@ -4515,12 +4573,11 @@ spawn(function()
                         )
 
                     until not _G.Complete_Trials
-                    or not v.Parent
-                    or not v:FindFirstChildOfClass("Humanoid")
-                    or v:FindFirstChildOfClass("Humanoid").Health <= 0
+                        or not v.Parent
+                        or not v:FindFirstChildOfClass("Humanoid")
+                        or v:FindFirstChildOfClass("Humanoid").Health <= 0
                 end
             end
-
         end)
     end
 end)
