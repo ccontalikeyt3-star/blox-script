@@ -4341,15 +4341,51 @@ GetSeaBeastTrial = function()
   end
 end
 spawn(function()
-  while wait(Sec) do
-    pcall(function()
-      if _G.Complete_Trials then
-        if tostring(plr.Data.Race.Value) == "Mink" then
-          notween(workspace.Map.MinkTrial.Ceiling.CFrame * CFrame.new(0,-20,0))
-	   end
-      end
-    end)
-  end
+    local MinkTrialDone = false
+
+    while task.wait(Sec) do
+        pcall(function()
+
+            if not _G.Complete_Trials then
+                MinkTrialDone = false
+                return
+            end
+
+            if tostring(plr.Data.Race.Value) ~= "Mink" then
+                MinkTrialDone = false
+                return
+            end
+
+            -- Já foi até o ponto da Mink Trial.
+            -- Não manda novamente.
+            if MinkTrialDone then
+                return
+            end
+
+            local minkTrial = workspace.Map:FindFirstChild("MinkTrial")
+
+            if not minkTrial then
+                return
+            end
+
+            local ceiling = minkTrial:FindFirstChild("Ceiling")
+
+            if not ceiling then
+                return
+            end
+
+            local target = ceiling.CFrame * CFrame.new(0, -20, 0)
+
+            print("[Race V4] Indo para a Trial da Mink...")
+
+            notween(target)
+
+            MinkTrialDone = true
+
+            print("[Race V4] Ponto da Mink Trial alcançado. Não vou repetir o movimento.")
+
+        end)
+    end
 end)
 spawn(function()
   while wait(Sec) do
