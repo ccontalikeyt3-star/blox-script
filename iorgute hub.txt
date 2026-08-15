@@ -2087,7 +2087,7 @@ spawn(function()
 		  end		      
 		  local v = GetConnectionEnemies(Human_v3_Mob[3])
           if v then repeat wait()Attack.Kill(v,_G.Auto_Human)until v.Humanoid.Health <= 0 or not v.Parent or not _G.Auto_Human			           
-          else _tp(CFrame.new(-1576.7166748047, 198.59265136719, 13.724286079407))
+          else _tp(CFrame.new(-2088.77, 73.03, -4281.48))
 	      end		      		
         end
       end
