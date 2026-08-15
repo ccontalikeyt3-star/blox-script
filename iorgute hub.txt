@@ -4388,70 +4388,176 @@ spawn(function()
     end
 end)
 spawn(function()
-    while task.wait(0.5) do
-        if not _G.Complete_Trials then
-            continue
+
+    --==================================================
+    -- SHARK / FISHMAN TRIAL
+    --==================================================
+
+    -- Local onde o jogo coloca o jogador quando
+    -- ele realmente entra na própria Shark Trial.
+    -- Usado SOMENTE para detectar a Trial.
+    local SharkTrialPosition = Vector3.new(
+        25029.6035,
+        -0.2854,
+        12145.4637
+    )
+
+    -- Margem da área da Trial
+    local SharkTrialRadius = 500
+
+    -- Guarda o Sea Beast que estamos atacando.
+    -- Evita ficar trocando de alvo a todo instante.
+    local SharkTarget = nil
+
+    --==================================================
+    -- DETECTAR NOSSA TRIAL
+    --==================================================
+
+    local function IsInSharkTrial()
+
+        local character = plr.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+
+        if not hrp then
+            return false
         end
+
+        local distance =
+            (hrp.Position - SharkTrialPosition).Magnitude
+
+        return distance <= SharkTrialRadius
+    end
+
+    --==================================================
+    -- LOOP
+    --==================================================
+
+    while task.wait(0.1) do
 
         pcall(function()
 
+            -- Auto Trial desligado
+            if not _G.Complete_Trials then
+                SharkTarget = nil
+                return
+            end
+
+            --==================================================
+            -- RAÇA
+            --==================================================
+
             local race = tostring(plr.Data.Race.Value)
 
+            -- Compatibilidade com os nomes
             if race ~= "Shark" and race ~= "Fishman" then
+                SharkTarget = nil
                 return
             end
 
-            local character = plr.Character
-            local hrp = character and character:FindFirstChild("HumanoidRootPart")
+            --==================================================
+            -- PROTEÇÃO CONTRA TRIAL DE OUTRO JOGADOR
+            --==================================================
 
-            if not hrp then
+            -- Se o jogo não colocou NOSSO personagem
+            -- dentro da região da Trial, não fazemos nada.
+            if not IsInSharkTrial() then
+                SharkTarget = nil
                 return
             end
 
-            local TrialPosition = Vector3.new(
-                25029.6035,
-                -0.2854,
-                12145.4637
-            )
+            --==================================================
+            -- ENCONTRAR SEA BEAST
+            --==================================================
 
-            local distance = (hrp.Position - TrialPosition).Magnitude
+            if not SharkTarget then
 
-            if distance > 500 then
+                local SeaBeast = GetSeaBeastTrial()
+
+                if not SeaBeast then
+                    return
+                end
+
+                SharkTarget = SeaBeast
+
+                print("================================")
+                print("[Race V4] SHARK TRIAL")
+                print("[Race V4] Trial detectada!")
+                print("[Race V4] Alvo:", SharkTarget.Name)
+                print("================================")
+            end
+
+            --==================================================
+            -- VALIDAR ALVO
+            --==================================================
+
+            if not SharkTarget.Parent then
+                SharkTarget = nil
                 return
             end
 
-            local SeaBeast = GetSeaBeastTrial()
+            local humanoid =
+                SharkTarget:FindFirstChildOfClass("Humanoid")
 
-            if not SeaBeast then
-                print("[Race V4] Shark: Sea Beast não encontrada.")
+            local root =
+                SharkTarget:FindFirstChild("HumanoidRootPart")
+
+            if not humanoid or humanoid.Health <= 0 or not root then
+                SharkTarget = nil
                 return
             end
 
-            local beastRoot = SeaBeast:FindFirstChild("HumanoidRootPart")
+            --==================================================
+            -- POSIÇÃO DO ALVO
+            --==================================================
 
-            if not beastRoot then
-                print("[Race V4] Shark: SeaBeast sem HumanoidRootPart.")
-                return
-            end
+            MousePos = root.Position
 
-            print("================================")
-            print("[Race V4] SHARK TEST")
-            print("Boss:", SeaBeast.Name)
-            print("Boss Position:", beastRoot.Position)
-            print("Player Position:", hrp.Position)
-            print("Distance:", (hrp.Position - beastRoot.Position).Magnitude)
-            print("Chamando _tp...")
-            print("================================")
+            --==================================================
+            -- MOVIMENTO
+            --==================================================
 
-            MousePos = beastRoot.Position
-
+            -- Mantém o personagem na posição de combate
+            -- acima da Sea Beast.
             _tp(CFrame.new(
-                beastRoot.Position.X,
+                root.Position.X,
                 workspace.Map["WaterBase-Plane"].Position.Y + 300,
-                beastRoot.Position.Z
+                root.Position.Z
             ))
 
-            print("[Race V4] _tp executado.")
+            --==================================================
+            -- ATAQUES
+            --==================================================
+
+            Useskills("Melee", "Z")
+            Useskills("Melee", "X")
+            Useskills("Melee", "C")
+
+            task.wait(0.1)
+
+            Useskills("Sword", "Z")
+            Useskills("Sword", "X")
+
+            task.wait(0.1)
+
+            Useskills("Blox Fruit", "Z")
+            Useskills("Blox Fruit", "X")
+            Useskills("Blox Fruit", "C")
+
+            task.wait(0.1)
+
+            Useskills("Gun", "Z")
+            Useskills("Gun", "X")
+
+            --==================================================
+            -- SEA BEAST MORREU
+            --==================================================
+
+            if humanoid.Health <= 0 then
+
+                print("[Race V4] Sea Beast derrotada!")
+
+                SharkTarget = nil
+            end
 
         end)
     end
