@@ -4389,29 +4389,16 @@ spawn(function()
 end)
 spawn(function()
 
-    --==================================================
-    -- SHARK / FISHMAN TRIAL
-    --==================================================
-
-    -- Local onde o jogo coloca o jogador quando
-    -- ele realmente entra na própria Shark Trial.
-    -- Usado SOMENTE para detectar a Trial.
     local SharkTrialPosition = Vector3.new(
         25029.6035,
         -0.2854,
         12145.4637
     )
 
-    -- Margem da área da Trial
     local SharkTrialRadius = 500
 
-    -- Guarda o Sea Beast que estamos atacando.
-    -- Evita ficar trocando de alvo a todo instante.
     local SharkTarget = nil
-
-    --==================================================
-    -- DETECTAR NOSSA TRIAL
-    --==================================================
+    local MovingToShark = false
 
     local function IsInSharkTrial()
 
@@ -4422,46 +4409,31 @@ spawn(function()
             return false
         end
 
-        local distance =
-            (hrp.Position - SharkTrialPosition).Magnitude
-
-        return distance <= SharkTrialRadius
+        return (hrp.Position - SharkTrialPosition).Magnitude <= SharkTrialRadius
     end
-
-    --==================================================
-    -- LOOP
-    --==================================================
 
     while task.wait(0.1) do
 
         pcall(function()
 
-            -- Auto Trial desligado
             if not _G.Complete_Trials then
                 SharkTarget = nil
+                MovingToShark = false
                 return
             end
-
-            --==================================================
-            -- RAÇA
-            --==================================================
 
             local race = tostring(plr.Data.Race.Value)
 
-            -- Compatibilidade com os nomes
             if race ~= "Shark" and race ~= "Fishman" then
                 SharkTarget = nil
+                MovingToShark = false
                 return
             end
 
-            --==================================================
-            -- PROTEÇÃO CONTRA TRIAL DE OUTRO JOGADOR
-            --==================================================
-
-            -- Se o jogo não colocou NOSSO personagem
-            -- dentro da região da Trial, não fazemos nada.
+            -- Não é nossa Trial
             if not IsInSharkTrial() then
                 SharkTarget = nil
+                MovingToShark = false
                 return
             end
 
@@ -4477,6 +4449,12 @@ spawn(function()
                     return
                 end
 
+                local root = SeaBeast:FindFirstChild("HumanoidRootPart")
+
+                if not root then
+                    return
+                end
+
                 SharkTarget = SeaBeast
 
                 print("================================")
@@ -4484,14 +4462,42 @@ spawn(function()
                 print("[Race V4] Trial detectada!")
                 print("[Race V4] Alvo:", SharkTarget.Name)
                 print("================================")
+
+                --==================================================
+                -- MOVIMENTO
+                --==================================================
+
+                -- Executa o _tp em paralelo para não bloquear
+                -- a execução das skills.
+                if not MovingToShark then
+
+                    MovingToShark = true
+
+                    task.spawn(function()
+
+                        pcall(function()
+
+                            _tp(CFrame.new(
+                                root.Position.X,
+                                workspace.Map["WaterBase-Plane"].Position.Y + 300,
+                                root.Position.Z
+                            ))
+
+                        end)
+
+                        MovingToShark = false
+
+                    end)
+                end
             end
 
             --==================================================
             -- VALIDAR ALVO
             --==================================================
 
-            if not SharkTarget.Parent then
+            if not SharkTarget or not SharkTarget.Parent then
                 SharkTarget = nil
+                MovingToShark = false
                 return
             end
 
@@ -4503,30 +4509,21 @@ spawn(function()
 
             if not humanoid or humanoid.Health <= 0 or not root then
                 SharkTarget = nil
+                MovingToShark = false
                 return
             end
 
             --==================================================
-            -- POSIÇÃO DO ALVO
+            -- AIM
             --==================================================
 
             MousePos = root.Position
 
             --==================================================
-            -- MOVIMENTO
-            --==================================================
-
-            -- Mantém o personagem na posição de combate
-            -- acima da Sea Beast.
-            _tp(CFrame.new(
-                root.Position.X,
-                workspace.Map["WaterBase-Plane"].Position.Y + 300,
-                root.Position.Z
-            ))
-
-            --==================================================
             -- ATAQUES
             --==================================================
+
+            print("[Race V4] Atacando:", SharkTarget.Name)
 
             Useskills("Melee", "Z")
             Useskills("Melee", "X")
@@ -4549,7 +4546,7 @@ spawn(function()
             Useskills("Gun", "X")
 
             --==================================================
-            -- SEA BEAST MORREU
+            -- SEA BEAST DERROTADA
             --==================================================
 
             if humanoid.Health <= 0 then
@@ -4557,21 +4554,11 @@ spawn(function()
                 print("[Race V4] Sea Beast derrotada!")
 
                 SharkTarget = nil
+                MovingToShark = false
             end
 
         end)
     end
-end)
-spawn(function()
-  while wait(Sec) do
-    pcall(function()
-      if _G.Complete_Trials then
-        if tostring(plr.Data.Race.Value) == "Cyborg" then
-         _tp(workspace.Map.CyborgTrial.Floor.CFrame * CFrame.new(0,500,0))
-   	   end
-      end
-    end)
-  end
 end)
 spawn(function()
   while wait(Sec) do
