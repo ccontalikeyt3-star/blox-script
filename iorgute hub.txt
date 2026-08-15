@@ -4223,63 +4223,72 @@ end)
 Tabs.Mirage:AddButton({
     Title = "Teleporte Pro Temple of Time",
     Description = "",
-
     Callback = function()
 
-        local Player = game.Players.LocalPlayer
-        local Character = Player.Character or Player.CharacterAdded:Wait()
-        local Root = Character:WaitForChild("HumanoidRootPart")
+        local Players = game:GetService("Players")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local RunService = game:GetService("RunService")
 
-        -- Localização do Mysterious Force
-        local MysteriousForce = workspace.NPCs:FindFirstChild("Mysterious Force")
+        local player = Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
 
-        if MysteriousForce then
-            local NPC_Root = MysteriousForce:FindFirstChild("Humanoid RootPart")
+        -- Carrega o Temple of Time
+        local map = workspace:WaitForChild("Map")
 
-            if NPC_Root then
-                -- Vai até o Mysterious Force
-                Root.CFrame = NPC_Root.CFrame * CFrame.new(0, 0, 3)
+        if not map:FindFirstChild("Temple of Time") then
+            local stash = ReplicatedStorage:FindFirstChild("MapStash")
 
-                task.wait(1)
+            if stash then
+                local temple = stash:FindFirstChild("Temple of Time")
 
-                -- Procura o diálogo
-                local Dialogue = Player.PlayerGui.Main:FindFirstChild("Dialogue")
-
-                if Dialogue then
-                    local Option1 = Dialogue:FindFirstChild("Option1")
-
-                    if Option1 then
-                        -- "Use it"
-                        Option1:Activate()
-
-                        task.wait(1)
-
-                        print("Mysterious Force: Use it ativado")
-                        return
-                    end
+                if temple then
+                    temple.Parent = map
+                    task.wait(0.5)
                 end
             end
         end
 
-        -- Fallback: teleporte direto
-        local Position = Vector3.new(
+        -- Entrada do Temple
+        local entrance = Vector3.new(
             28286.56,
             14933.21,
             103.34
         )
 
-        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(
+        -- Entrada oficial do jogo
+        ReplicatedStorage.Remotes.CommF_:InvokeServer(
             "requestEntrance",
-            Position
+            entrance
         )
 
-        task.wait(1)
+        task.wait(0.5)
 
-        Root = Character:WaitForChild("HumanoidRootPart")
+        character = player.Character or character
+        hrp = character:WaitForChild("HumanoidRootPart")
 
-        Root.CFrame = CFrame.new(Position)
-        Root.AssemblyLinearVelocity = Vector3.zero
-        Root.AssemblyAngularVelocity = Vector3.zero
+        -- Mantém o personagem parado por 3 segundos
+        local holdPosition = hrp.Position
+        local startTime = tick()
+
+        local connection
+        connection = RunService.Heartbeat:Connect(function()
+
+            if not hrp or not hrp.Parent then
+                connection:Disconnect()
+                return
+            end
+
+            if tick() - startTime >= 3 then
+                connection:Disconnect()
+                return
+            end
+
+            hrp.CFrame = CFrame.new(holdPosition)
+            hrp.AssemblyLinearVelocity = Vector3.zero
+            hrp.AssemblyAngularVelocity = Vector3.zero
+
+        end)
 
     end
 })
