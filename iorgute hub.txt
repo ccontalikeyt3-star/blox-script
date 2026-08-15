@@ -4388,33 +4388,115 @@ spawn(function()
     end
 end)
 spawn(function()
-  while wait(Sec) do
-    pcall(function() 
-      if _G.Complete_Trials then
-	    if tostring(plr.Data.Race.Value) == "Fishman" then
-	      if GetSeaBeastTrial() then            
-            repeat task.wait()
-              spawn(function()_tp(CFrame.new(GetSeaBeastTrial().HumanoidRootPart.Position.X,game:GetService("Workspace").Map["WaterBase-Plane"].Position.Y + 300,GetSeaBeastTrial().HumanoidRootPart.Position.Z))end)
-		      MousePos = GetSeaBeastTrial().HumanoidRootPart.Position
-              Useskills("Melee","Z")
-	          Useskills("Melee","X")
-	          Useskills("Melee","C")
-              wait(.1)
-              Useskills("Sword","Z")
-              Useskills("Sword","X")
-              wait(.1)
-              Useskills("Blox Fruit","Z")
-              Useskills("Blox Fruit","X")
-              Useskills("Blox Fruit","C")
-              wait(.1)
-              Useskills("Gun","Z")
-              Useskills("Gun","X")
-            until _G.Complete_Trials == false or not GetSeaBeastTrial()
-          end          
-	    end
-      end
-    end)
-  end
+
+    -- Posição onde o jogo coloca o jogador
+    -- quando ele realmente entra na Shark/Fishman Trial
+    local SharkTrialPosition = Vector3.new(
+        25029.6035,
+        -0.2854,
+        12145.4637
+    )
+
+    -- Margem para pequenas diferenças na posição
+    local SharkTrialRadius = 500
+
+    local function IsInSharkTrial()
+        local character = plr.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+
+        if not hrp then
+            return false
+        end
+
+        local distance = (hrp.Position - SharkTrialPosition).Magnitude
+
+        return distance <= SharkTrialRadius
+    end
+
+    while task.wait(Sec) do
+        pcall(function()
+
+            if not _G.Complete_Trials then
+                return
+            end
+
+            if tostring(plr.Data.Race.Value) ~= "Fishman" then
+                return
+            end
+
+            -- IMPORTANTE:
+            -- Não procura a Sea Beast se essa não for
+            -- a região da nossa própria Trial.
+            if not IsInSharkTrial() then
+                return
+            end
+
+            local SeaBeast = GetSeaBeastTrial()
+
+            if SeaBeast then
+
+                print("[Race V4] Shark Trial encontrada!")
+                print("[Race V4] Sea Beast:", SeaBeast.Name)
+
+                repeat
+                    task.wait()
+
+                    if not _G.Complete_Trials then
+                        break
+                    end
+
+                    if not SeaBeast.Parent then
+                        break
+                    end
+
+                    local humanoid = SeaBeast:FindFirstChildOfClass("Humanoid")
+
+                    if humanoid and humanoid.Health > 0 then
+
+                        local root = SeaBeast:FindFirstChild("HumanoidRootPart")
+
+                        if root then
+                            MousePos = root.Position
+
+                            spawn(function()
+                                _tp(CFrame.new(
+                                    root.Position.X,
+                                    workspace.Map["WaterBase-Plane"].Position.Y + 300,
+                                    root.Position.Z
+                                ))
+                            end)
+                        end
+
+                        Useskills("Melee", "Z")
+                        Useskills("Melee", "X")
+                        Useskills("Melee", "C")
+
+                        task.wait(0.1)
+
+                        Useskills("Sword", "Z")
+                        Useskills("Sword", "X")
+
+                        task.wait(0.1)
+
+                        Useskills("Blox Fruit", "Z")
+                        Useskills("Blox Fruit", "X")
+                        Useskills("Blox Fruit", "C")
+
+                        task.wait(0.1)
+
+                        Useskills("Gun", "Z")
+                        Useskills("Gun", "X")
+                    else
+                        break
+                    end
+
+                until not _G.Complete_Trials
+                    or not SeaBeast.Parent
+                    or not SeaBeast:FindFirstChildOfClass("Humanoid")
+                    or SeaBeast:FindFirstChildOfClass("Humanoid").Health <= 0
+            end
+        end)
+    end
 end)
 spawn(function()
   while wait(Sec) do
