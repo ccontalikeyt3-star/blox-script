@@ -4195,19 +4195,9 @@ spawn(function()
     end
   end
 end)
-local Players = game:GetService("Players")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local plr = Players.LocalPlayer
-
---========================================================--
---                 AUTO TREINAR V4
---========================================================--
-
 local AutoTreinarV4 = Tabs.Mirage:AddToggle("AutoTreinarV4", {
     Title = "Auto Treinar V4",
-    Description = "Treina a Race V4 automaticamente",
+    Description = "Farm de energia + ativação da V4 + upgrade do tier",
     Default = false
 })
 
@@ -4215,208 +4205,71 @@ AutoTreinarV4:OnChanged(function(Value)
     _G.AcientOne = Value
 end)
 
-
---========================================================--
---                     CONFIGURAÇÕES
---========================================================--
-
-local BonesTable = {
-    "Reborn Skeleton",
-    "Living Zombie",
-    "Demonic Soul",
-    "Posessed Mummy"
-}
-
-local FarmingPosition = CFrame.new(
-    -9495.6806640625,
-    453.58624267578125,
-    5977.3486328125
-)
-
-local SafePosition = CFrame.new(
-    -8987.041015625,
-    215.862060546875,
-    5886.71044921875
-)
-
-
---========================================================--
---                  PEGAR CHARACTER
---========================================================--
-
-local function GetCharacter()
-
-    if not plr then
-        return nil
-    end
-
-    return plr.Character
-
-end
-
-
---========================================================--
---                  ATIVAR V4
---========================================================--
-
-local function ActivateV4()
-
-    print("[Race V4] Tentando ativar V4...")
-
-    local Character = GetCharacter()
-
-    if not Character then
-        return false
-    end
-
-    -- Vai para uma posição segura
-    pcall(function()
-        _tp(SafePosition)
-    end)
-
-    task.wait(0.5)
-
-    -- Pressiona Y
-    VirtualInputManager:SendKeyEvent(
-        true,
-        Enum.KeyCode.Y,
-        false,
-        game
-    )
-
-    task.wait(0.15)
-
-    -- Solta Y
-    VirtualInputManager:SendKeyEvent(
-        false,
-        Enum.KeyCode.Y,
-        false,
-        game
-    )
-
-    task.wait(0.7)
-
-    local RaceTransformed =
-        Character:FindFirstChild("RaceTransformed")
-
-    if RaceTransformed
-    and RaceTransformed.Value == true then
-
-        print("[Race V4] V4 ativada com sucesso!")
-
-        return true
-    end
-
-    print("[Race V4] V4 não ativou.")
-
-    return false
-end
-
-
---========================================================--
---                     AUTO FARM
---========================================================--
-
 task.spawn(function()
-
     while task.wait(0.2) do
-
         if _G.AcientOne then
-
             pcall(function()
-
-                local Character = GetCharacter()
-
+                local Character = plr.Character
                 if not Character then
                     return
                 end
 
-                local RaceEnergy =
-                    Character:FindFirstChild("RaceEnergy")
+                local RaceEnergy = Character:FindFirstChild("RaceEnergy")
+                local RaceTransformed = Character:FindFirstChild("RaceTransformed")
 
-                local RaceTransformed =
-                    Character:FindFirstChild("RaceTransformed")
-
+                -- O personagem ainda não possui os valores da V4.
                 if not RaceEnergy or not RaceTransformed then
                     return
                 end
 
+                -- Energia cheia: ativa a V4 usando a mesma função do hub.
+                if RaceEnergy.Value == 1 and RaceTransformed.Value == false then
+                    Useskills("nil", "Y")
+                    task.wait(1)
 
-                --================================================--
-                --             ENERGIA CHEIA
-                --================================================--
-
-                if RaceEnergy.Value >= 1
-                and RaceTransformed.Value == false then
-
-                    print(
-                        "[Race V4] Energia cheia:",
-                        RaceEnergy.Value
-                    )
-
-                    local Activated = ActivateV4()
-
-                    if Activated then
-
-                        task.wait(0.5)
-
-                        pcall(function()
-
-                            ReplicatedStorage.Remotes.CommF_:InvokeServer(
-                                "UpgradeRace",
-                                "Buy"
-                            )
-
-                        end)
-
-                        print(
-                            "[Race V4] UpgradeRace Buy executado."
-                        )
-
+                    -- Depois de ativar, tenta comprar o próximo upgrade do tier.
+                    if RaceTransformed.Value == true then
+                        replicated.Remotes.CommF_:InvokeServer("UpgradeRace", "Buy")
                     end
 
                     return
                 end
 
+                -- Enquanto não estiver transformado, procura os NPCs usados para o treino.
+                if RaceTransformed.Value == false then
+                    local BonesTable = {
+                        "Reborn Skeleton",
+                        "Living Zombie",
+                        "Demonic Soul",
+                        "Posessed Mummy"
+                    }
 
-                --================================================--
-                --           JÁ ESTÁ TRANSFORMADO
-                --================================================--
+                    local Enemy = GetConnectionEnemies(BonesTable)
 
-                if RaceTransformed.Value == true then
-                    return
+                    if Enemy
+                    and Enemy.Parent
+                    and Enemy:FindFirstChild("Humanoid")
+                    and Enemy.Humanoid.Health > 0 then
+
+                        repeat
+                            task.wait()
+                            Attack.Kill(Enemy, _G.AcientOne)
+                        until not _G.AcientOne
+                        or not Enemy.Parent
+                        or not Enemy:FindFirstChild("Humanoid")
+                        or Enemy.Humanoid.Health <= 0
+
+                    else
+                        _tp(CFrame.new(
+                            -9495.6806640625,
+                            453.58624267578125,
+                            5977.3486328125
+                        ))
+                    end
                 end
-
-
-                --================================================--
-                --                  FARM NPC
-                --================================================--
-
-                local Enemy =
-                    GetConnectionEnemies(BonesTable)
-
-                if Enemy
-                and Enemy.Parent
-                and Enemy:FindFirstChild("Humanoid")
-                and Enemy.Humanoid.Health > 0 then
-
-                    Attack.Kill(
-                        Enemy,
-                        _G.AcientOne
-                    )
-
-                else
-
-                    _tp(FarmingPosition)
-
-                end
-
             end)
-
         end
-
     end
-
 end)
 Tabs.Mirage:AddButton({
     Title = "Teleporte Pro Temple of Time",
