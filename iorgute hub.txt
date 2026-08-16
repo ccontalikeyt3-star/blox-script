@@ -4430,7 +4430,8 @@ spawn(function()
                 return
             end
 
-            -- Não é nossa Trial
+            -- Só executa se o próprio jogo colocou
+            -- nosso personagem na Shark Trial.
             if not IsInSharkTrial() then
                 SharkTarget = nil
                 MovingToShark = false
@@ -4449,9 +4450,13 @@ spawn(function()
                     return
                 end
 
-                local root = SeaBeast:FindFirstChild("HumanoidRootPart")
+                local root =
+                    SeaBeast:FindFirstChild("HumanoidRootPart")
 
-                if not root then
+                local health =
+                    SeaBeast:FindFirstChild("Health")
+
+                if not root or not health then
                     return
                 end
 
@@ -4461,14 +4466,13 @@ spawn(function()
                 print("[Race V4] SHARK TRIAL")
                 print("[Race V4] Trial detectada!")
                 print("[Race V4] Alvo:", SharkTarget.Name)
+                print("[Race V4] Health:", health.Value)
                 print("================================")
 
                 --==================================================
-                -- MOVIMENTO
+                -- IR ATÉ A SEA BEAST
                 --==================================================
 
-                -- Executa o _tp em paralelo para não bloquear
-                -- a execução das skills.
                 if not MovingToShark then
 
                     MovingToShark = true
@@ -4492,7 +4496,7 @@ spawn(function()
             end
 
             --==================================================
-            -- VALIDAR ALVO
+            -- VALIDAR SEA BEAST
             --==================================================
 
             if not SharkTarget or not SharkTarget.Parent then
@@ -4501,13 +4505,21 @@ spawn(function()
                 return
             end
 
-            local humanoid =
-                SharkTarget:FindFirstChildOfClass("Humanoid")
-
             local root =
                 SharkTarget:FindFirstChild("HumanoidRootPart")
 
-            if not humanoid or humanoid.Health <= 0 or not root then
+            local health =
+                SharkTarget:FindFirstChild("Health")
+
+            if not root or not health then
+                SharkTarget = nil
+                MovingToShark = false
+                return
+            end
+
+            if health.Value <= 0 then
+                print("[Race V4] Sea Beast derrotada!")
+
                 SharkTarget = nil
                 MovingToShark = false
                 return
@@ -4520,10 +4532,11 @@ spawn(function()
             MousePos = root.Position
 
             --==================================================
-            -- ATAQUES
+            -- ATAQUE
             --==================================================
 
             print("[Race V4] Atacando:", SharkTarget.Name)
+            print("[Race V4] Vida da Sea Beast:", health.Value)
 
             Useskills("Melee", "Z")
             Useskills("Melee", "X")
@@ -4544,18 +4557,6 @@ spawn(function()
 
             Useskills("Gun", "Z")
             Useskills("Gun", "X")
-
-            --==================================================
-            -- SEA BEAST DERROTADA
-            --==================================================
-
-            if humanoid.Health <= 0 then
-
-                print("[Race V4] Sea Beast derrotada!")
-
-                SharkTarget = nil
-                MovingToShark = false
-            end
 
         end)
     end
