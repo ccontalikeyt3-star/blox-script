@@ -275,7 +275,7 @@ Attack.KillSea = function(model,Succes)
       TerrorSharkRecovering = false
     else
       TerrorSharkMove(
-        EnemyRoot.CFrame * CFrame.new(0,65,0)
+        EnemyRoot.CFrame * CFrame.new(0,100,0)
       )
       task.wait(0.25)
       return
