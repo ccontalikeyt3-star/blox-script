@@ -1,48 +1,87 @@
--- Bootstrap: garante que o jogador tenha um time antes de o hub continuar.
--- Se ainda não houver time, escolhe Marines automaticamente e espera o personagem
--- estar carregado antes de continuar a inicialização.
+--========================================================--
+--              INICIALIZAÇÃO AUTOMÁTICA DO TIME
+--========================================================--
+
 do
     local Players = game:GetService("Players")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local LP = Players.LocalPlayer
 
     repeat task.wait() until game:IsLoaded()
-    repeat task.wait() until LP and LP.Character
+    repeat task.wait() until LP and LP:FindFirstChild("PlayerGui")
+    repeat task.wait() until LP.PlayerGui:FindFirstChild("Main")
 
-    local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
+    local Main = LP.PlayerGui.Main
 
+    -- Espera a interface inicial terminar de carregar.
+    repeat
+        task.wait(0.1)
+    until not Main:FindFirstChild("Loading")
+        or Main.Loading.Visible == false
+
+    -- Sem time: tenta escolher Marines repetidamente.
     if not LP.Team then
-        pcall(function()
-            CommF:InvokeServer("SetTeam", "Marines")
-        end)
+        local CommF = ReplicatedStorage
+            :WaitForChild("Remotes")
+            :WaitForChild("CommF_")
 
-        -- Aguarda o Roblox atualizar LocalPlayer.Team.
-        local timeout = os.clock() + 5
-        repeat
-            task.wait(0.1)
-        until LP.Team or os.clock() >= timeout
+        local deadline = os.clock() + 8
+
+        while not LP.Team and os.clock() < deadline do
+            pcall(function()
+                CommF:InvokeServer("SetTeam", "Marines")
+            end)
+
+            task.wait(0.4)
+        end
+
+        -- O SetTeam normalmente causa atualização/respawn.
+        if LP.Team then
+            task.wait(1)
+        end
     end
 
-    -- Dá tempo para o time/personagem terminar de inicializar.
-    task.wait(1.5)
+    -- Última tentativa caso o servidor ainda não tenha atualizado Team.
+    if not LP.Team then
+        pcall(function()
+            ReplicatedStorage.Remotes.CommF_:InvokeServer(
+                "SetTeam",
+                "Marines"
+            )
+        end)
+
+        task.wait(1)
+    end
 end
 
--- Auto-load original, agora executado somente depois da inicialização do time.
+
+--========================================================--
+--                    AUTO-LOAD ORIGINAL
+--========================================================--
+
 task.spawn(function()
     local Players = game:GetService("Players")
     local LP = Players.LocalPlayer
 
     repeat task.wait() until game:IsLoaded()
-    repeat task.wait() until LP and LP.Character
+    repeat task.wait() until LP
+        and LP.Character
+        and LP.Team
+
+    -- Garante que o time/personagem estabilizou.
+    task.wait(1)
 
     local success, err = pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby"))()
+        loadstring(game:HttpGet(
+            "https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby"
+        ))()
     end)
 
     if not success then
         warn("Falha ao executar auto-load:", err)
     end
 end)
+
 
 do
   ply = game.Players
