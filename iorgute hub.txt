@@ -4201,13 +4201,17 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local plr = Players.LocalPlayer
 
-local Q = Tabs.Mirage:AddToggle("Q", {
+--========================================================--
+--                 AUTO TREINAR V4
+--========================================================--
+
+local AutoTreinarV4 = Tabs.Mirage:AddToggle("AutoTreinarV4", {
     Title = "Auto Treinar V4",
     Description = "Treina a Race V4 automaticamente",
     Default = false
 })
 
-Q:OnChanged(function(Value)
+AutoTreinarV4:OnChanged(function(Value)
     _G.AcientOne = Value
 end)
 
@@ -4247,30 +4251,6 @@ local function GetCharacter()
     end
 
     return plr.Character
-        or plr.CharacterAdded:Wait()
-
-end
-
-
---========================================================--
---                  PEGAR STATUS DA V4
---========================================================--
-
-local function GetRaceStatus()
-
-    local Character = GetCharacter()
-
-    if not Character then
-        return nil, nil
-    end
-
-    local RaceEnergy =
-        Character:FindFirstChild("RaceEnergy")
-
-    local RaceTransformed =
-        Character:FindFirstChild("RaceTransformed")
-
-    return RaceEnergy, RaceTransformed
 
 end
 
@@ -4289,7 +4269,7 @@ local function ActivateV4()
         return false
     end
 
-    -- Vai para uma posição segura antes de ativar
+    -- Vai para uma posição segura
     pcall(function()
         _tp(SafePosition)
     end)
@@ -4316,8 +4296,8 @@ local function ActivateV4()
 
     task.wait(0.7)
 
-    local RaceEnergy, RaceTransformed =
-        GetRaceStatus()
+    local RaceTransformed =
+        Character:FindFirstChild("RaceTransformed")
 
     if RaceTransformed
     and RaceTransformed.Value == true then
@@ -4330,7 +4310,6 @@ local function ActivateV4()
     print("[Race V4] V4 não ativou.")
 
     return false
-
 end
 
 
@@ -4342,108 +4321,99 @@ task.spawn(function()
 
     while task.wait(0.2) do
 
-        if not _G.AcientOne then
-            continue
-        end
+        if _G.AcientOne then
 
-        pcall(function()
+            pcall(function()
 
-            local Character = GetCharacter()
+                local Character = GetCharacter()
 
-            if not Character then
-                return
-            end
+                if not Character then
+                    return
+                end
 
+                local RaceEnergy =
+                    Character:FindFirstChild("RaceEnergy")
 
-            local RaceEnergy =
-                Character:FindFirstChild("RaceEnergy")
+                local RaceTransformed =
+                    Character:FindFirstChild("RaceTransformed")
 
-            local RaceTransformed =
-                Character:FindFirstChild("RaceTransformed")
-
-
-            if not RaceEnergy or not RaceTransformed then
-                return
-            end
+                if not RaceEnergy or not RaceTransformed then
+                    return
+                end
 
 
-            --================================================--
-            --             ENERGIA CHEIA
-            --================================================--
+                --================================================--
+                --             ENERGIA CHEIA
+                --================================================--
 
-            if RaceEnergy.Value >= 1
-            and RaceTransformed.Value == false then
-
-                print(
-                    "[Race V4] Energia cheia:",
-                    RaceEnergy.Value
-                )
-
-                -- Ativa a V4
-                local Activated = ActivateV4()
-
-                if Activated then
-
-                    task.wait(0.5)
-
-                    -- Tenta fazer o upgrade do Tier
-                    pcall(function()
-
-                        ReplicatedStorage.Remotes.CommF_:InvokeServer(
-                            "UpgradeRace",
-                            "Buy"
-                        )
-
-                    end)
+                if RaceEnergy.Value >= 1
+                and RaceTransformed.Value == false then
 
                     print(
-                        "[Race V4] UpgradeRace Buy executado."
+                        "[Race V4] Energia cheia:",
+                        RaceEnergy.Value
                     )
+
+                    local Activated = ActivateV4()
+
+                    if Activated then
+
+                        task.wait(0.5)
+
+                        pcall(function()
+
+                            ReplicatedStorage.Remotes.CommF_:InvokeServer(
+                                "UpgradeRace",
+                                "Buy"
+                            )
+
+                        end)
+
+                        print(
+                            "[Race V4] UpgradeRace Buy executado."
+                        )
+
+                    end
+
+                    return
+                end
+
+
+                --================================================--
+                --           JÁ ESTÁ TRANSFORMADO
+                --================================================--
+
+                if RaceTransformed.Value == true then
+                    return
+                end
+
+
+                --================================================--
+                --                  FARM NPC
+                --================================================--
+
+                local Enemy =
+                    GetConnectionEnemies(BonesTable)
+
+                if Enemy
+                and Enemy.Parent
+                and Enemy:FindFirstChild("Humanoid")
+                and Enemy.Humanoid.Health > 0 then
+
+                    Attack.Kill(
+                        Enemy,
+                        _G.AcientOne
+                    )
+
+                else
+
+                    _tp(FarmingPosition)
 
                 end
 
-                return
-            end
+            end)
 
-
-            --================================================--
-            --           JÁ ESTÁ TRANSFORMADO
-            --================================================--
-
-            if RaceTransformed.Value == true then
-
-                -- Não fica apertando Y novamente.
-                return
-
-            end
-
-
-            --================================================--
-            --                  FARM NPC
-            --================================================--
-
-            local Enemy =
-                GetConnectionEnemies(BonesTable)
-
-
-            if Enemy
-            and Enemy.Parent
-            and Enemy:FindFirstChild("Humanoid")
-            and Enemy.Humanoid.Health > 0 then
-
-                Attack.Kill(
-                    Enemy,
-                    _G.AcientOne
-                )
-
-            else
-
-                -- Não encontrou NPC
-                _tp(FarmingPosition)
-
-            end
-
-        end)
+        end
 
     end
 
