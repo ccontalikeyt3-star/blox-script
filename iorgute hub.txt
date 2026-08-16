@@ -1,19 +1,75 @@
+--========================================================--
+--              INICIALIZAÇÃO AUTOMÁTICA DO TIME
+--========================================================--
+
+do
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local LP = Players.LocalPlayer
+
+    repeat task.wait() until game:IsLoaded()
+    repeat task.wait() until LP
+
+    local commF = ReplicatedStorage
+        :WaitForChild("Remotes")
+        :WaitForChild("CommF_")
+
+    -- Se ainda não tiver time, escolhe Marines automaticamente.
+    -- O ChooseTeam é importante para a tela inicial do Blox Fruits.
+    if not LP.Team then
+        for i = 1, 30 do
+            pcall(function()
+                commF:InvokeServer("SetTeam", "Marines")
+                commF:InvokeServer("ChooseTeam", "Marines")
+            end)
+
+            task.wait(0.1)
+
+            if LP.Team then
+                break
+            end
+        end
+    end
+
+    -- Aguarda o Roblox confirmar o time antes de continuar.
+    local deadline = os.clock() + 8
+
+    while not LP.Team and os.clock() < deadline do
+        task.wait(0.1)
+    end
+
+    -- Dá tempo para o personagem/GUI terminarem de carregar.
+    task.wait(1.5)
+end
+
+
+--========================================================--
+--                    AUTO-LOAD ORIGINAL
+--========================================================--
+
 task.spawn(function()
-    local HttpService = game:GetService("HttpService")
     local Players = game:GetService("Players")
     local LP = Players.LocalPlayer
 
     repeat task.wait() until game:IsLoaded()
-    repeat task.wait() until LP and LP.Character
+    repeat task.wait() until LP
+        and LP.Character
+        and LP.Team
+
+    -- Garante que o time/personagem estabilizou.
+    task.wait(1)
 
     local success, err = pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby"))()
+        loadstring(game:HttpGet(
+            "https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby"
+        ))()
     end)
 
     if not success then
         warn("Falha ao executar auto-load:", err)
     end
 end)
+
 
 do
   ply = game.Players
