@@ -133,115 +133,32 @@ Attack.Kill2 = function(model,Succes)
   end
 end
 Attack.KillSea = function(model,Succes)
-  if not model or not Succes then return end
-
-  local Character = plr.Character
-  local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
-  local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-  local EnemyRoot = model:FindFirstChild("HumanoidRootPart")
-
-  if not RootPart or not Humanoid or not EnemyRoot then return end
-
-  if not model:GetAttribute("Locked") then
-    model:SetAttribute("Locked",EnemyRoot.CFrame)
-  end
-
+  if model and Succes then
+  if not model:GetAttribute("Locked") then model:SetAttribute("Locked",model.HumanoidRootPart.CFrame) end
   PosMon = model:GetAttribute("Locked").Position
   BringEnemy()
   EquipWeapon(_G.SelectWeapon)
+  local Equipped = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+  local ToolTip = Equipped.ToolTip
+  local PlayerHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+local LowHealth = PlayerHumanoid
+    and PlayerHumanoid.MaxHealth > 0
+    and (PlayerHumanoid.Health / PlayerHumanoid.MaxHealth) <= 0.40
 
-  local function GetObjectPosition(obj)
-    if obj:IsA("BasePart") then
-      return obj.Position
-    elseif obj:IsA("Attachment") then
-      return obj.WorldPosition
-    elseif obj:IsA("Model") then
-      if obj.PrimaryPart then return obj.PrimaryPart.Position end
-      local hrp = obj:FindFirstChild("HumanoidRootPart",true)
-      if hrp and hrp:IsA("BasePart") then return hrp.Position end
-    end
-
-    local part = obj:FindFirstChildWhichIsA("BasePart",true)
-    return part and part.Position or nil
-  end
-
-  local function FindTerrorDanger()
-    local worldOrigin = workspace:FindFirstChild("_WorldOrigin")
-    if not worldOrigin then return false,nil end
-
-    for _,obj in ipairs(worldOrigin:GetDescendants()) do
-      local n = string.lower(obj.Name)
-
-      if n == "sharksplash"
-      or n == "chargeup"
-      or n == "sharkcharge"
-      or string.find(n,"sharksplash")
-      or string.find(n,"chargeup") then
-
-        local pos = GetObjectPosition(obj)
-        if pos and (pos - RootPart.Position).Magnitude <= 80 then
-          return true,pos
-        end
-      end
-    end
-
-    return false,nil
-  end
-
-  local Dangerous,DangerPosition = FindTerrorDanger()
-
-  local LowHealth =
-    Humanoid.MaxHealth > 0
-    and (Humanoid.Health / Humanoid.MaxHealth) <= 0.40
-
-  if LowHealth then
-    notween(EnemyRoot.CFrame * CFrame.new(0,55,35))
-    task.wait(0.35)
-    return
-  end
-
-  if Dangerous then
-    local Direction
-
-    if DangerPosition then
-      Direction = RootPart.Position - DangerPosition
-      Direction = Direction.Magnitude > 0 and Direction.Unit or Vector3.new(0,0,1)
-    else
-      Direction = Vector3.new(0,0,1)
-    end
-
-    notween(
-      CFrame.new(
-        RootPart.Position
-        + Direction * 70
-        + Vector3.new(0,35,0)
-      )
-    )
-
-    task.wait(0.30)
-    return
-  end
-
-  local Equipped = Character:FindFirstChildOfClass("Tool")
-  local ToolTip = Equipped and Equipped.ToolTip or ""
-
-  if ToolTip == "Blox Fruit" then
-    notween(
-      EnemyRoot.CFrame
-      * CFrame.new(0,12,0)
-      * CFrame.Angles(0,math.rad(90),0)
-    )
-  else
-    notween(
-      EnemyRoot.CFrame
-      * CFrame.new(0,12,8)
-      * CFrame.Angles(0,math.rad(180),0)
-    )
-  end
-
-  task.wait(0.12)
+if LowHealth then
+    -- Proteção do Terror Shark: fica afastado enquanto a vida estiver baixa.
+    -- O retorno só acontece depois que a vida subir novamente.
+    notween(model.HumanoidRootPart.CFrame * CFrame.new(0,45,18))
+    wait(0.50)
+elseif ToolTip == "Blox Fruit" then
+    _tp(model.HumanoidRootPart.CFrame * CFrame.new(0,10,0) * CFrame.Angles(0,math.rad(90),0))
+else
+    -- Terror Shark: mantém o personagem em uma altura fixa para o M1.
+    notween(model.HumanoidRootPart.CFrame * CFrame.new(0,10,8))
+    wait(0.15)
 end
-
+  end
+end
 Attack.Sword = function(model,Succes)
   if model and Succes then
   if not model:GetAttribute("Locked") then model:SetAttribute("Locked",model.HumanoidRootPart.CFrame) end
@@ -5707,33 +5624,7 @@ spawn(function()
   while wait() do
     pcall(function()	
       if _G.Shark then local a={"Shark"}if CheckShark()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.Shark)until _G.Shark==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
-      if _G.TerrorShark then
-        local TerrorTarget = nil
-
-        for _,enemy in pairs(workspace.Enemies:GetChildren()) do
-          if enemy.Name == "Terrorshark" and Attack.Alive(enemy) then
-            TerrorTarget = enemy
-            break
-          end
-        end
-
-        if TerrorTarget then
-          repeat
-            task.wait()
-
-            if not _G.TerrorShark
-            or not TerrorTarget.Parent
-            or not Attack.Alive(TerrorTarget) then
-              break
-            end
-
-            Attack.KillSea(TerrorTarget,true)
-
-          until not _G.TerrorShark
-          or not TerrorTarget.Parent
-          or not Attack.Alive(TerrorTarget)
-        end
-      end
+      if _G.TerrorShark then local a={"Terrorshark"}if CheckTerrorShark()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.KillSea(c,_G.TerrorShark)until _G.TerrorShark==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
       if _G.Piranha then local a={"Piranha"}if CheckPiranha()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.Piranha)until _G.Piranha==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
       if _G.MobCrew then local a={"Fish Crew Member"}if CheckFishCrew()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.MobCrew)until _G.MobCrew==false or not c.Parent or c.Humanoid.Health<=0 end end end end end                 
       if _G.HCM then local a={"Haunted Crew Member"}if CheckHauntedCrew()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.HCM)until _G.HCM==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
