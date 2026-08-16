@@ -132,56 +132,71 @@ Attack.Kill2 = function(model,Succes)
   if RandomCFrame then wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(25, 30, 0)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(-25, 30 ,0)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0))end
   end
 end
-Attack.KillSea = function(model, Succes)
+Attack.KillSea = function(model,Succes)
   if not model or not Succes then return end
 
   local Character = plr.Character
-  local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+  local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
   local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
   local EnemyRoot = model:FindFirstChild("HumanoidRootPart")
 
-  if not Root or not Humanoid or not EnemyRoot then return end
+  if not RootPart or not Humanoid or not EnemyRoot then return end
 
   if not model:GetAttribute("Locked") then
-    model:SetAttribute("Locked", EnemyRoot.CFrame)
+    model:SetAttribute("Locked",EnemyRoot.CFrame)
   end
 
   PosMon = model:GetAttribute("Locked").Position
   BringEnemy()
   EquipWeapon(_G.SelectWeapon)
 
-  local Dangerous = false
-  local DangerPosition = nil
-
-  -- Detecta efeitos de ataque do Terror Shark sem assumir que eles
-  -- existam o tempo todo.
-  for _, obj in ipairs(workspace:GetDescendants()) do
+  local function GetObjectPosition(obj)
     if obj:IsA("BasePart") then
-      local Name = string.lower(obj.Name)
+      return obj.Position
+    elseif obj:IsA("Attachment") then
+      return obj.WorldPosition
+    elseif obj:IsA("Model") then
+      if obj.PrimaryPart then return obj.PrimaryPart.Position end
+      local hrp = obj:FindFirstChild("HumanoidRootPart",true)
+      if hrp and hrp:IsA("BasePart") then return hrp.Position end
+    end
 
-      if string.find(Name,"sharksplash")
-      or string.find(Name,"chargeup")
-      or string.find(Name,"sharkcharge") then
+    local part = obj:FindFirstChildWhichIsA("BasePart",true)
+    return part and part.Position or nil
+  end
 
-        local Distance = (obj.Position - Root.Position).Magnitude
+  local function FindTerrorDanger()
+    local worldOrigin = workspace:FindFirstChild("_WorldOrigin")
+    if not worldOrigin then return false,nil end
 
-        if Distance <= 80 then
-          Dangerous = true
-          DangerPosition = obj.Position
-          break
+    for _,obj in ipairs(worldOrigin:GetDescendants()) do
+      local n = string.lower(obj.Name)
+
+      if n == "sharksplash"
+      or n == "chargeup"
+      or n == "sharkcharge"
+      or string.find(n,"sharksplash")
+      or string.find(n,"chargeup") then
+
+        local pos = GetObjectPosition(obj)
+        if pos and (pos - RootPart.Position).Magnitude <= 80 then
+          return true,pos
         end
       end
     end
+
+    return false,nil
   end
+
+  local Dangerous,DangerPosition = FindTerrorDanger()
 
   local LowHealth =
     Humanoid.MaxHealth > 0
     and (Humanoid.Health / Humanoid.MaxHealth) <= 0.40
 
   if LowHealth then
-    notween(
-      EnemyRoot.CFrame * CFrame.new(0,55,25)
-    )
+    notween(EnemyRoot.CFrame * CFrame.new(0,55,35))
+    task.wait(0.35)
     return
   end
 
@@ -189,24 +204,21 @@ Attack.KillSea = function(model, Succes)
     local Direction
 
     if DangerPosition then
-      Direction = Root.Position - DangerPosition
-
-      if Direction.Magnitude > 0 then
-        Direction = Direction.Unit
-      else
-        Direction = Vector3.new(0,0,1)
-      end
+      Direction = RootPart.Position - DangerPosition
+      Direction = Direction.Magnitude > 0 and Direction.Unit or Vector3.new(0,0,1)
     else
       Direction = Vector3.new(0,0,1)
     end
 
-    local AwayPosition =
-      Root.Position
-      + Direction * 70
-      + Vector3.new(0,35,0)
+    notween(
+      CFrame.new(
+        RootPart.Position
+        + Direction * 70
+        + Vector3.new(0,35,0)
+      )
+    )
 
-    notween(CFrame.new(AwayPosition))
-    task.wait(0.25)
+    task.wait(0.30)
     return
   end
 
@@ -229,8 +241,7 @@ Attack.KillSea = function(model, Succes)
 
   task.wait(0.12)
 end
-  end
-end
+
 Attack.Sword = function(model,Succes)
   if model and Succes then
   if not model:GetAttribute("Locked") then model:SetAttribute("Locked",model.HumanoidRootPart.CFrame) end
@@ -4269,13 +4280,34 @@ spawn(function()
 end)
 local AutoTreinarV4 = Tabs.Mirage:AddToggle("AutoTreinarV4", {
     Title = "Auto Treinar V4",
-    Description = "Farm de energia + ativação da V4 + upgrade do tier",
+    Description = "Farm de energia + ativação da V4 + compra automática dos upgrades",
     Default = false
 })
 
 AutoTreinarV4:OnChanged(function(Value)
     _G.AcientOne = Value
 end)
+
+-- Evita spam no servidor: tenta comprar no máximo uma vez a cada 2 segundos.
+local LastRaceUpgradeAttempt = 0
+
+local function TryUpgradeRace()
+    if not _G.AcientOne then
+        return
+    end
+
+    if os.clock() - LastRaceUpgradeAttempt < 2 then
+        return
+    end
+
+    LastRaceUpgradeAttempt = os.clock()
+
+    pcall(function()
+        -- O servidor só conclui a compra quando o próximo treinamento
+        -- estiver realmente disponível.
+        replicated.Remotes.CommF_:InvokeServer("UpgradeRace", "Buy")
+    end)
+end
 
 task.spawn(function()
     while task.wait(0.2) do
@@ -4289,25 +4321,25 @@ task.spawn(function()
                 local RaceEnergy = Character:FindFirstChild("RaceEnergy")
                 local RaceTransformed = Character:FindFirstChild("RaceTransformed")
 
-                -- O personagem ainda não possui os valores da V4.
                 if not RaceEnergy or not RaceTransformed then
                     return
                 end
 
-                -- Energia cheia: ativa a V4 usando a mesma função do hub.
-                if RaceEnergy.Value == 1 and RaceTransformed.Value == false then
+                -- Verifica continuamente se o próximo treinamento já pode ser comprado.
+                TryUpgradeRace()
+
+                -- Energia cheia: ativa a V4.
+                if RaceEnergy.Value >= 1 and RaceTransformed.Value == false then
                     Useskills("nil", "Y")
                     task.wait(1)
 
-                    -- Depois de ativar, tenta comprar o próximo upgrade do tier.
-                    if RaceTransformed.Value == true then
-                        replicated.Remotes.CommF_:InvokeServer("UpgradeRace", "Buy")
-                    end
+                    -- Tenta comprar logo depois da ativação.
+                    TryUpgradeRace()
 
                     return
                 end
 
-                -- Enquanto não estiver transformado, procura os NPCs usados para o treino.
+                -- Enquanto não estiver transformado, procura os NPCs do treino.
                 if RaceTransformed.Value == false then
                     local BonesTable = {
                         "Reborn Skeleton",
@@ -4343,6 +4375,7 @@ task.spawn(function()
         end
     end
 end)
+
 Tabs.Mirage:AddButton({
     Title = "Teleporte Pro Temple of Time",
     Description = "",
@@ -5675,32 +5708,32 @@ spawn(function()
     pcall(function()	
       if _G.Shark then local a={"Shark"}if CheckShark()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.Shark)until _G.Shark==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
       if _G.TerrorShark then
-  local TerrorShark = nil
+        local TerrorTarget = nil
 
-  for _, c in pairs(workspace.Enemies:GetChildren()) do
-    if c.Name == "Terrorshark" and Attack.Alive(c) then
-      TerrorShark = c
-      break
-    end
-  end
+        for _,enemy in pairs(workspace.Enemies:GetChildren()) do
+          if enemy.Name == "Terrorshark" and Attack.Alive(enemy) then
+            TerrorTarget = enemy
+            break
+          end
+        end
 
-  if TerrorShark then
-    repeat
-      task.wait()
+        if TerrorTarget then
+          repeat
+            task.wait()
 
-      if not _G.TerrorShark
-      or not TerrorShark.Parent
-      or not Attack.Alive(TerrorShark) then
-        break
+            if not _G.TerrorShark
+            or not TerrorTarget.Parent
+            or not Attack.Alive(TerrorTarget) then
+              break
+            end
+
+            Attack.KillSea(TerrorTarget,true)
+
+          until not _G.TerrorShark
+          or not TerrorTarget.Parent
+          or not Attack.Alive(TerrorTarget)
+        end
       end
-
-      Attack.KillSea(TerrorShark,true)
-
-    until not _G.TerrorShark
-    or not TerrorShark.Parent
-    or not Attack.Alive(TerrorShark)
-  end
-end
       if _G.Piranha then local a={"Piranha"}if CheckPiranha()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.Piranha)until _G.Piranha==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
       if _G.MobCrew then local a={"Fish Crew Member"}if CheckFishCrew()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.MobCrew)until _G.MobCrew==false or not c.Parent or c.Humanoid.Health<=0 end end end end end                 
       if _G.HCM then local a={"Haunted Crew Member"}if CheckHauntedCrew()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.HCM)until _G.HCM==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
