@@ -4398,7 +4398,8 @@ spawn(function()
     local SharkTrialRadius = 500
 
     local SharkTarget = nil
-    local MovingToShark = false
+    local SharkMoving = false
+    local SharkReadyToAttack = false
 
     local function IsInSharkTrial()
 
@@ -4416,25 +4417,38 @@ spawn(function()
 
         pcall(function()
 
+            --==================================================
+            -- DESATIVADO
+            --==================================================
+
             if not _G.Complete_Trials then
                 SharkTarget = nil
-                MovingToShark = false
+                SharkMoving = false
+                SharkReadyToAttack = false
                 return
             end
+
+            --==================================================
+            -- RAÇA
+            --==================================================
 
             local race = tostring(plr.Data.Race.Value)
 
             if race ~= "Shark" and race ~= "Fishman" then
                 SharkTarget = nil
-                MovingToShark = false
+                SharkMoving = false
+                SharkReadyToAttack = false
                 return
             end
 
-            -- Só executa se o próprio jogo colocou
-            -- nosso personagem na Shark Trial.
+            --==================================================
+            -- PROTEÇÃO CONTRA TRIAL DE OUTRA PESSOA
+            --==================================================
+
             if not IsInSharkTrial() then
                 SharkTarget = nil
-                MovingToShark = false
+                SharkMoving = false
+                SharkReadyToAttack = false
                 return
             end
 
@@ -4461,37 +4475,80 @@ spawn(function()
                 end
 
                 SharkTarget = SeaBeast
+                SharkReadyToAttack = false
 
                 print("================================")
                 print("[Race V4] SHARK TRIAL")
-                print("[Race V4] Trial detectada!")
-                print("[Race V4] Alvo:", SharkTarget.Name)
-                print("[Race V4] Health:", health.Value)
+                print("[Race V4] Sea Beast encontrada:", SharkTarget.Name)
+                print("[Race V4] Indo até a Sea Beast...")
                 print("================================")
 
                 --==================================================
                 -- IR ATÉ A SEA BEAST
                 --==================================================
 
-                if not MovingToShark then
+                if not SharkMoving then
 
-                    MovingToShark = true
+                    SharkMoving = true
 
-                    task.spawn(function()
+                    local targetPosition = CFrame.new(
+                        root.Position.X,
+                        workspace.Map["WaterBase-Plane"].Position.Y + 300,
+                        root.Position.Z
+                    )
 
-                        pcall(function()
+                    -- Faz o movimento primeiro.
+                    _tp(targetPosition)
 
-                            _tp(CFrame.new(
-                                root.Position.X,
-                                workspace.Map["WaterBase-Plane"].Position.Y + 300,
-                                root.Position.Z
-                            ))
+                    -- Agora espera o personagem realmente chegar.
+                    local startTime = tick()
 
-                        end)
+                    while task.wait(0.05) do
 
-                        MovingToShark = false
+                        if not _G.Complete_Trials then
+                            break
+                        end
 
-                    end)
+                        if not SharkTarget
+                        or not SharkTarget.Parent then
+                            break
+                        end
+
+                        local character = plr.Character
+                        local hrp =
+                            character and character:FindFirstChild("HumanoidRootPart")
+
+                        local currentRoot =
+                            SharkTarget:FindFirstChild("HumanoidRootPart")
+
+                        if not hrp or not currentRoot then
+                            break
+                        end
+
+                        local distance =
+                            (hrp.Position - currentRoot.Position).Magnitude
+
+                        -- Chegou perto o suficiente.
+                        if distance <= 100 then
+
+                            print("[Race V4] Chegou na Sea Beast!")
+                            print("[Race V4] Distancia:", distance)
+
+                            SharkReadyToAttack = true
+                            break
+                        end
+
+                        -- Segurança caso o movimento não consiga chegar.
+                        if tick() - startTime > 10 then
+
+                            print("[Race V4] Timeout ao chegar na Sea Beast.")
+                            print("[Race V4] Distancia atual:", distance)
+
+                            break
+                        end
+                    end
+
+                    SharkMoving = false
                 end
             end
 
@@ -4501,7 +4558,7 @@ spawn(function()
 
             if not SharkTarget or not SharkTarget.Parent then
                 SharkTarget = nil
-                MovingToShark = false
+                SharkReadyToAttack = false
                 return
             end
 
@@ -4513,30 +4570,36 @@ spawn(function()
 
             if not root or not health then
                 SharkTarget = nil
-                MovingToShark = false
+                SharkReadyToAttack = false
                 return
             end
 
             if health.Value <= 0 then
+
                 print("[Race V4] Sea Beast derrotada!")
 
                 SharkTarget = nil
-                MovingToShark = false
+                SharkReadyToAttack = false
                 return
             end
 
             --==================================================
-            -- AIM
+            -- SÓ ATACA DEPOIS DE CHEGAR
             --==================================================
 
+            if not SharkReadyToAttack then
+                return
+            end
+
+            -- Atualiza a posição NOVAMENTE depois de chegar.
             MousePos = root.Position
 
-            --==================================================
-            -- ATAQUE
-            --==================================================
-
             print("[Race V4] Atacando:", SharkTarget.Name)
-            print("[Race V4] Vida da Sea Beast:", health.Value)
+            print("[Race V4] Vida:", health.Value)
+
+            --==================================================
+            -- ATAQUES
+            --==================================================
 
             Useskills("Melee", "Z")
             Useskills("Melee", "X")
