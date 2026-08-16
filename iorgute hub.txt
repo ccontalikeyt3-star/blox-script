@@ -209,8 +209,13 @@ Attack.KillSea = function(model,Succes)
   local Equipped = Character:FindFirstChildOfClass("Tool")
   local ToolTip = Equipped and Equipped.ToolTip or ""
 
-  -- Terror Shark: SharkSplash e ChargeUp são os efeitos
-  -- usados pela source de referência para iniciar o dodge.
+  -- O alvo do ataque fica sempre apontado para o NPC do mar.
+  -- Isso corrige a situação em que o personagem chega ao alvo,
+  -- mas o M1 continua mirando a posição anterior.
+  MousePos = EnemyRoot.Position
+  AitSeaSkill_Custom = EnemyRoot.CFrame
+
+  -- Terror Shark: detectar os efeitos usados pela source de referência.
   local DangerPart = nil
   local WorldOrigin = workspace:FindFirstChild("_WorldOrigin")
 
@@ -233,11 +238,11 @@ Attack.KillSea = function(model,Succes)
 
   if LowHealth then
     notween(EnemyRoot.CFrame * CFrame.new(0,45,18))
-    task.wait(0.35)
+    task.wait(0.30)
     return
   end
 
-  -- Dodge: afasta do efeito e espera antes de voltar ao alvo.
+  -- Dodge.
   if DangerPart then
     local Direction = Root.Position - DangerPart.Position
 
@@ -257,7 +262,7 @@ Attack.KillSea = function(model,Succes)
     return
   end
 
-  -- Combate normal.
+  -- Posição de combate.
   if ToolTip == "Blox Fruit" then
     _tp(
       EnemyRoot.CFrame
@@ -271,7 +276,35 @@ Attack.KillSea = function(model,Succes)
     )
   end
 
-  task.wait(0.12)
+  -- Reobtém a ferramenta depois do teleporte/equip.
+  Equipped = Character:FindFirstChildOfClass("Tool")
+
+  -- M1 adicional para os NPCs do mar.
+  -- São vários acionamentos curtos em vez de depender somente
+  -- do movimento do personagem para registrar o dano.
+  if Equipped and Equipped:IsA("Tool") then
+    pcall(function()
+      Equipped:Activate()
+    end)
+
+    task.wait(0.06)
+
+    if Equipped.Parent == Character then
+      pcall(function()
+        Equipped:Activate()
+      end)
+    end
+
+    task.wait(0.06)
+
+    if Equipped.Parent == Character then
+      pcall(function()
+        Equipped:Activate()
+      end)
+    end
+  end
+
+  task.wait(0.08)
 end
 Attack.Sword = function(model,Succes)
   if model and Succes then
@@ -5756,6 +5789,12 @@ spawn(function()
       or not TerrorTarget.Parent
       or not Attack.Alive(TerrorTarget) then
         break
+      end
+
+      local targetRoot = TerrorTarget:FindFirstChild("HumanoidRootPart")
+      if targetRoot then
+        MousePos = targetRoot.Position
+        AitSeaSkill_Custom = targetRoot.CFrame
       end
 
       Attack.KillSea(TerrorTarget,true)
