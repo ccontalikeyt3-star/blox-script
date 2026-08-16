@@ -248,7 +248,10 @@ Attack.KillSea = function(model,Succes)
   end
 
   PosMon = model:GetAttribute("Locked").Position
-  BringEnemy()
+
+  -- NÃO usa BringEnemy no Terror Shark.
+  -- BringEnemy agrupa TODOS os NPCs vivos em até 300 studs,
+  -- o que também puxa os NPCs/entidades dos Sea Events para o mesmo ponto.
   EquipWeapon(_G.SelectWeapon)
 
   local Equipped = Character:FindFirstChildOfClass("Tool")
@@ -299,11 +302,11 @@ Attack.KillSea = function(model,Succes)
 
   -- ==========================================================
   -- ATAQUE
-  -- Bem mais baixo: 8 studs acima do Shark.
+  -- Mantém o personagem dentro da distância curta de ataque.
   -- ==========================================================
 
   local AttackCFrame =
-    EnemyRoot.CFrame * CFrame.new(0,8,0)
+    EnemyRoot.CFrame * CFrame.new(0,10,0)
 
   MousePos = EnemyRoot.Position
   AitSeaSkill_Custom = EnemyRoot.CFrame
