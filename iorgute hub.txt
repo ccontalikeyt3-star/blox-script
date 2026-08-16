@@ -209,53 +209,68 @@ Attack.KillSea = function(model,Succes)
   local Equipped = Character:FindFirstChildOfClass("Tool")
   local ToolTip = Equipped and Equipped.ToolTip or ""
   local State = getgenv()
-  local Now = tick()
 
   local HealthRatio =
     Humanoid.MaxHealth > 0
     and (Humanoid.Health / Humanoid.MaxHealth)
     or 0
 
-  -- Vida baixa: sai completamente do combate.
+  -- ==========================================================
+  -- RECUPERAÇÃO
+  -- Entra em modo de recuperação de forma persistente.
+  -- Só volta a atacar quando chegar a 85% da vida.
+  -- ==========================================================
+
   if HealthRatio <= 0.45 then
-    State.TerrorSafeUntil = Now + 0.75
-    notween(EnemyRoot.CFrame * CFrame.new(0,90,0))
-    task.wait(0.45)
-    return
+    State.TerrorRecovering = true
   end
 
-  -- Recuperação: não ataca até voltar a 85%.
-  if State.TerrorSafeUntil
-  and Now < State.TerrorSafeUntil
-  and HealthRatio < 0.85 then
-    notween(EnemyRoot.CFrame * CFrame.new(0,90,0))
-    task.wait(0.35)
-    return
+  if State.TerrorRecovering then
+    if HealthRatio >= 0.85 then
+      State.TerrorRecovering = false
+    else
+      -- Bem acima do Terror Shark enquanto recupera.
+      notween(EnemyRoot.CFrame * CFrame.new(0,90,0))
+      task.wait(0.35)
+      return
+    end
   end
 
-  if HealthRatio >= 0.85 then
-    State.TerrorSafeUntil = nil
-  end
+  -- ==========================================================
+  -- DODGE
+  -- ==========================================================
 
-  -- Dodge acionado pelo listener de SharkSplash/ChargeUp.
-  if State.TerrorDodgeUntil and Now < State.TerrorDodgeUntil then
+  local Now = tick()
+
+  if State.TerrorDodgeUntil
+  and Now < State.TerrorDodgeUntil then
+
     notween(EnemyRoot.CFrame * CFrame.new(0,75,0))
     task.wait(0.30)
     return
   end
 
+  -- ==========================================================
+  -- ATAQUE
+  -- Altura reduzida: 22 studs acima.
+  -- A versão anterior ficava a 35, o que fazia o dano registrar
+  -- principalmente quando o Shark saltava.
+  -- ==========================================================
+
   MousePos = EnemyRoot.Position
   AitSeaSkill_Custom = EnemyRoot.CFrame
 
-  -- Mantém o personagem acima do Shark, evitando ficar na água/lateral.
   if ToolTip == "Blox Fruit" then
     _tp(
       EnemyRoot.CFrame
-      * CFrame.new(0,35,0)
+      * CFrame.new(0,22,0)
       * CFrame.Angles(0,math.rad(90),0)
     )
   else
-    notween(EnemyRoot.CFrame * CFrame.new(0,35,0))
+    notween(
+      EnemyRoot.CFrame
+      * CFrame.new(0,22,0)
+    )
   end
 
   task.wait(0.08)
@@ -265,8 +280,9 @@ Attack.KillSea = function(model,Succes)
     AitSeaSkill_Custom = EnemyRoot.CFrame
   end
 
-  -- Um único ataque por ciclo; evita spam de Activate().
+  -- Um ataque por ciclo.
   Equipped = Character:FindFirstChildOfClass("Tool")
+
   if Equipped and Equipped.Parent == Character then
     pcall(function()
       Equipped:Activate()
@@ -278,9 +294,6 @@ end
 
 -- ==========================================================
 -- DODGE DO TERROR SHARK
--- A source de referência usa ChildAdded em _WorldOrigin para
--- SharkSplash/ChargeUp. O estado fica ativo por alguns segundos
--- para não voltar imediatamente ao alvo.
 -- ==========================================================
 
 do
@@ -300,10 +313,14 @@ do
           return
         end
 
-        local target = workspace.Enemies:FindFirstChild("Terrorshark")
+        local target =
+          workspace.Enemies:FindFirstChild("Terrorshark")
+
         if not target then return end
 
-        local targetRoot = target:FindFirstChild("HumanoidRootPart")
+        local targetRoot =
+          target:FindFirstChild("HumanoidRootPart")
+
         if not targetRoot then return end
 
         if (targetRoot.Position - obj.Position).Magnitude <= 20 then
