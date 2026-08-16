@@ -1,5 +1,34 @@
+-- Bootstrap: garante que o jogador tenha um time antes de o hub continuar.
+-- Se ainda não houver time, escolhe Marines automaticamente e espera o personagem
+-- estar carregado antes de continuar a inicialização.
+do
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local LP = Players.LocalPlayer
+
+    repeat task.wait() until game:IsLoaded()
+    repeat task.wait() until LP and LP.Character
+
+    local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
+
+    if not LP.Team then
+        pcall(function()
+            CommF:InvokeServer("SetTeam", "Marines")
+        end)
+
+        -- Aguarda o Roblox atualizar LocalPlayer.Team.
+        local timeout = os.clock() + 5
+        repeat
+            task.wait(0.1)
+        until LP.Team or os.clock() >= timeout
+    end
+
+    -- Dá tempo para o time/personagem terminar de inicializar.
+    task.wait(1.5)
+end
+
+-- Auto-load original, agora executado somente depois da inicialização do time.
 task.spawn(function()
-    local HttpService = game:GetService("HttpService")
     local Players = game:GetService("Players")
     local LP = Players.LocalPlayer
 
