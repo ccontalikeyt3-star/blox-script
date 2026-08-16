@@ -8,50 +8,38 @@ do
     local LP = Players.LocalPlayer
 
     repeat task.wait() until game:IsLoaded()
-    repeat task.wait() until LP and LP:FindFirstChild("PlayerGui")
-    repeat task.wait() until LP.PlayerGui:FindFirstChild("Main")
+    repeat task.wait() until LP
 
-    local Main = LP.PlayerGui.Main
+    local commF = ReplicatedStorage
+        :WaitForChild("Remotes")
+        :WaitForChild("CommF_")
 
-    -- Espera a interface inicial terminar de carregar.
-    repeat
-        task.wait(0.1)
-    until not Main:FindFirstChild("Loading")
-        or Main.Loading.Visible == false
-
-    -- Sem time: tenta escolher Marines repetidamente.
+    -- Se ainda não tiver time, escolhe Marines automaticamente.
+    -- O ChooseTeam é importante para a tela inicial do Blox Fruits.
     if not LP.Team then
-        local CommF = ReplicatedStorage
-            :WaitForChild("Remotes")
-            :WaitForChild("CommF_")
-
-        local deadline = os.clock() + 8
-
-        while not LP.Team and os.clock() < deadline do
+        for i = 1, 30 do
             pcall(function()
-                CommF:InvokeServer("SetTeam", "Marines")
+                commF:InvokeServer("SetTeam", "Marines")
+                commF:InvokeServer("ChooseTeam", "Marines")
             end)
 
-            task.wait(0.4)
-        end
+            task.wait(0.1)
 
-        -- O SetTeam normalmente causa atualização/respawn.
-        if LP.Team then
-            task.wait(1)
+            if LP.Team then
+                break
+            end
         end
     end
 
-    -- Última tentativa caso o servidor ainda não tenha atualizado Team.
-    if not LP.Team then
-        pcall(function()
-            ReplicatedStorage.Remotes.CommF_:InvokeServer(
-                "SetTeam",
-                "Marines"
-            )
-        end)
+    -- Aguarda o Roblox confirmar o time antes de continuar.
+    local deadline = os.clock() + 8
 
-        task.wait(1)
+    while not LP.Team and os.clock() < deadline do
+        task.wait(0.1)
     end
+
+    -- Dá tempo para o personagem/GUI terminarem de carregar.
+    task.wait(1.5)
 end
 
 
