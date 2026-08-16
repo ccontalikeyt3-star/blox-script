@@ -188,6 +188,37 @@ Attack.Kill2 = function(model,Succes)
   if RandomCFrame then wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(25, 30, 0)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(-25, 30 ,0)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0))end
   end
 end
+-- ==========================================================
+-- Terror Shark: movimento dedicado
+-- ==========================================================
+
+local TerrorSharkTween = nil
+local TerrorSharkRecovering = false
+
+local function TerrorSharkMove(targetCFrame, duration)
+  local Character = plr.Character
+  local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+  if not RootPart then return false end
+
+  if TerrorSharkTween then
+    pcall(function() TerrorSharkTween:Cancel() end)
+    TerrorSharkTween = nil
+  end
+
+  local TweenService = game:GetService("TweenService")
+  local distance = (targetCFrame.Position - RootPart.Position).Magnitude
+  duration = duration or math.clamp(distance / 450, 0.12, 0.65)
+
+  TerrorSharkTween = TweenService:Create(
+    RootPart,
+    TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
+    {CFrame = targetCFrame}
+  )
+
+  TerrorSharkTween:Play()
+  return true
+end
+
 Attack.KillSea = function(model,Succes)
   if not model or not Succes then return end
 
@@ -207,7 +238,6 @@ Attack.KillSea = function(model,Succes)
   EquipWeapon(_G.SelectWeapon)
 
   local Equipped = Character:FindFirstChildOfClass("Tool")
-  local ToolTip = Equipped and Equipped.ToolTip or ""
   local State = getgenv()
 
   local HealthRatio =
@@ -215,72 +245,51 @@ Attack.KillSea = function(model,Succes)
     and (Humanoid.Health / Humanoid.MaxHealth)
     or 0
 
-  -- ==========================================================
-  -- RECUPERAÇÃO
-  -- Entra em modo de recuperação de forma persistente.
-  -- Só volta a atacar quando chegar a 85% da vida.
-  -- ==========================================================
-
-  if HealthRatio <= 0.45 then
-    State.TerrorRecovering = true
+  -- Recuperação persistente: não volta a atacar enquanto estiver baixo.
+  if HealthRatio <= 0.50 then
+    TerrorSharkRecovering = true
   end
 
-  if State.TerrorRecovering then
-    if HealthRatio >= 0.85 then
-      State.TerrorRecovering = false
+  if TerrorSharkRecovering then
+    if HealthRatio >= 0.90 then
+      TerrorSharkRecovering = false
     else
-      -- Bem acima do Terror Shark enquanto recupera.
-      notween(EnemyRoot.CFrame * CFrame.new(0,90,0))
+      TerrorSharkMove(
+        EnemyRoot.CFrame * CFrame.new(0,85,0),
+        0.35
+      )
       task.wait(0.35)
       return
     end
   end
 
-  -- ==========================================================
-  -- DODGE
-  -- ==========================================================
-
-  local Now = tick()
-
-  if State.TerrorDodgeUntil
-  and Now < State.TerrorDodgeUntil then
-
-    notween(EnemyRoot.CFrame * CFrame.new(0,75,0))
-    task.wait(0.30)
+  -- Dodge mantém uma janela segura em vez de voltar imediatamente.
+  if State.TerrorDodgeUntil and tick() < State.TerrorDodgeUntil then
+    TerrorSharkMove(
+      EnemyRoot.CFrame * CFrame.new(0,65,0),
+      0.25
+    )
+    task.wait(0.25)
     return
   end
 
-  -- ==========================================================
-  -- ATAQUE
-  -- Altura reduzida: 22 studs acima.
-  -- A versão anterior ficava a 35, o que fazia o dano registrar
-  -- principalmente quando o Shark saltava.
-  -- ==========================================================
+  -- Posição de ataque mais baixa.
+  local AttackCFrame =
+    EnemyRoot.CFrame * CFrame.new(0,14,0)
 
   MousePos = EnemyRoot.Position
   AitSeaSkill_Custom = EnemyRoot.CFrame
 
-  if ToolTip == "Blox Fruit" then
-    _tp(
-      EnemyRoot.CFrame
-      * CFrame.new(0,22,0)
-      * CFrame.Angles(0,math.rad(90),0)
-    )
-  else
-    notween(
-      EnemyRoot.CFrame
-      * CFrame.new(0,22,0)
-    )
+  TerrorSharkMove(AttackCFrame,0.22)
+  task.wait(0.12)
+
+  if not _G.TerrorShark or not EnemyRoot.Parent then
+    return
   end
 
-  task.wait(0.08)
+  MousePos = EnemyRoot.Position
+  AitSeaSkill_Custom = EnemyRoot.CFrame
 
-  if EnemyRoot.Parent then
-    MousePos = EnemyRoot.Position
-    AitSeaSkill_Custom = EnemyRoot.CFrame
-  end
-
-  -- Um ataque por ciclo.
   Equipped = Character:FindFirstChildOfClass("Tool")
 
   if Equipped and Equipped.Parent == Character then
@@ -289,44 +298,45 @@ Attack.KillSea = function(model,Succes)
     end)
   end
 
-  task.wait(0.12)
+  task.wait(0.10)
 end
 
--- ==========================================================
--- DODGE DO TERROR SHARK
--- ==========================================================
-
+-- Dodge listener baseado nos efeitos usados pela source de referência.
 do
   local State = getgenv()
 
   if not State.TerrorDodgeConnection then
     State.TerrorDodgeUntil = 0
 
-    State.TerrorDodgeConnection =
-      workspace._WorldOrigin.ChildAdded:Connect(function(obj)
+    local WorldOrigin = workspace:FindFirstChild("_WorldOrigin")
 
-        if not _G.TerrorShark then return end
-        if not obj:IsA("BasePart") then return end
+    if WorldOrigin then
+      State.TerrorDodgeConnection =
+        WorldOrigin.ChildAdded:Connect(function(obj)
 
-        if obj.Name ~= "SharkSplash"
-        and obj.Name ~= "ChargeUp" then
-          return
-        end
+          if not _G.TerrorShark then return end
+          if not obj:IsA("BasePart") then return end
 
-        local target =
-          workspace.Enemies:FindFirstChild("Terrorshark")
+          if obj.Name ~= "SharkSplash"
+          and obj.Name ~= "ChargeUp" then
+            return
+          end
 
-        if not target then return end
+          local target =
+            workspace.Enemies:FindFirstChild("Terrorshark")
 
-        local targetRoot =
-          target:FindFirstChild("HumanoidRootPart")
+          if not target then return end
 
-        if not targetRoot then return end
+          local targetRoot =
+            target:FindFirstChild("HumanoidRootPart")
 
-        if (targetRoot.Position - obj.Position).Magnitude <= 20 then
-          State.TerrorDodgeUntil = tick() + 4
-        end
-      end)
+          if not targetRoot then return end
+
+          if (targetRoot.Position - obj.Position).Magnitude <= 25 then
+            State.TerrorDodgeUntil = tick() + 4
+          end
+        end)
+    end
   end
 end
 
@@ -5796,38 +5806,32 @@ spawn(function()
     pcall(function()	
       if _G.Shark then local a={"Shark"}if CheckShark()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.Shark)until _G.Shark==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
       if _G.TerrorShark then
-  local TerrorTarget = nil
+        local TerrorTarget = nil
 
-  for _,enemy in pairs(workspace.Enemies:GetChildren()) do
-    if enemy.Name == "Terrorshark" and Attack.Alive(enemy) then
-      TerrorTarget = enemy
-      break
-    end
-  end
+        for _,enemy in pairs(workspace.Enemies:GetChildren()) do
+          if enemy.Name == "Terrorshark" and Attack.Alive(enemy) then
+            TerrorTarget = enemy
+            break
+          end
+        end
 
-  if TerrorTarget then
-    repeat
-      task.wait()
+        if TerrorTarget then
+          repeat
+            task.wait(0.08)
 
-      if not _G.TerrorShark
-      or not TerrorTarget.Parent
-      or not Attack.Alive(TerrorTarget) then
-        break
+            if not _G.TerrorShark
+            or not TerrorTarget.Parent
+            or not Attack.Alive(TerrorTarget) then
+              break
+            end
+
+            Attack.KillSea(TerrorTarget,true)
+
+          until not _G.TerrorShark
+          or not TerrorTarget.Parent
+          or not Attack.Alive(TerrorTarget)
+        end
       end
-
-      local targetRoot = TerrorTarget:FindFirstChild("HumanoidRootPart")
-      if targetRoot then
-        MousePos = targetRoot.Position
-        AitSeaSkill_Custom = targetRoot.CFrame
-      end
-
-      Attack.KillSea(TerrorTarget,true)
-
-    until not _G.TerrorShark
-    or not TerrorTarget.Parent
-    or not Attack.Alive(TerrorTarget)
-  end
-end
       if _G.Piranha then local a={"Piranha"}if CheckPiranha()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.Piranha)until _G.Piranha==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
       if _G.MobCrew then local a={"Fish Crew Member"}if CheckFishCrew()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.MobCrew)until _G.MobCrew==false or not c.Parent or c.Humanoid.Health<=0 end end end end end                 
       if _G.HCM then local a={"Haunted Crew Member"}if CheckHauntedCrew()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.HCM)until _G.HCM==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
