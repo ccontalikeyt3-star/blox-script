@@ -4197,13 +4197,34 @@ spawn(function()
 end)
 local AutoTreinarV4 = Tabs.Mirage:AddToggle("AutoTreinarV4", {
     Title = "Auto Treinar V4",
-    Description = "Farm de energia + ativação da V4 + upgrade do tier",
+    Description = "Farm de energia + ativação da V4 + compra automática dos upgrades",
     Default = false
 })
 
 AutoTreinarV4:OnChanged(function(Value)
     _G.AcientOne = Value
 end)
+
+-- Evita spam no servidor: tenta comprar no máximo uma vez a cada 2 segundos.
+local LastRaceUpgradeAttempt = 0
+
+local function TryUpgradeRace()
+    if not _G.AcientOne then
+        return
+    end
+
+    if os.clock() - LastRaceUpgradeAttempt < 2 then
+        return
+    end
+
+    LastRaceUpgradeAttempt = os.clock()
+
+    pcall(function()
+        -- O servidor só conclui a compra quando o próximo treinamento
+        -- estiver realmente disponível.
+        replicated.Remotes.CommF_:InvokeServer("UpgradeRace", "Buy")
+    end)
+end
 
 task.spawn(function()
     while task.wait(0.2) do
@@ -4217,25 +4238,25 @@ task.spawn(function()
                 local RaceEnergy = Character:FindFirstChild("RaceEnergy")
                 local RaceTransformed = Character:FindFirstChild("RaceTransformed")
 
-                -- O personagem ainda não possui os valores da V4.
                 if not RaceEnergy or not RaceTransformed then
                     return
                 end
 
-                -- Energia cheia: ativa a V4 usando a mesma função do hub.
-                if RaceEnergy.Value == 1 and RaceTransformed.Value == false then
+                -- Verifica continuamente se o próximo treinamento já pode ser comprado.
+                TryUpgradeRace()
+
+                -- Energia cheia: ativa a V4.
+                if RaceEnergy.Value >= 1 and RaceTransformed.Value == false then
                     Useskills("nil", "Y")
                     task.wait(1)
 
-                    -- Depois de ativar, tenta comprar o próximo upgrade do tier.
-                    if RaceTransformed.Value == true then
-                        replicated.Remotes.CommF_:InvokeServer("UpgradeRace", "Buy")
-                    end
+                    -- Tenta comprar logo depois da ativação.
+                    TryUpgradeRace()
 
                     return
                 end
 
-                -- Enquanto não estiver transformado, procura os NPCs usados para o treino.
+                -- Enquanto não estiver transformado, procura os NPCs do treino.
                 if RaceTransformed.Value == false then
                     local BonesTable = {
                         "Reborn Skeleton",
@@ -4271,6 +4292,7 @@ task.spawn(function()
         end
     end
 end)
+
 Tabs.Mirage:AddButton({
     Title = "Teleporte Pro Temple of Time",
     Description = "",
