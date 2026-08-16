@@ -195,23 +195,37 @@ end
 local TerrorSharkTween = nil
 local TerrorSharkRecovering = false
 
-local function TerrorSharkMove(targetCFrame, duration)
+local function TerrorSharkMove(targetCFrame)
   local Character = plr.Character
   local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
   if not RootPart then return false end
 
+  local distance = (targetCFrame.Position - RootPart.Position).Magnitude
+
+  -- Não reinicia o Tween a cada ciclo se já estamos praticamente no alvo.
+  if distance <= 4 then
+    return true
+  end
+
   if TerrorSharkTween then
-    pcall(function() TerrorSharkTween:Cancel() end)
+    if TerrorSharkTween.PlaybackState == Enum.PlaybackState.Playing then
+      TerrorSharkTween:Cancel()
+    end
     TerrorSharkTween = nil
   end
 
   local TweenService = game:GetService("TweenService")
-  local distance = (targetCFrame.Position - RootPart.Position).Magnitude
-  duration = duration or math.clamp(distance / 450, 0.12, 0.65)
+
+  -- Movimento mais suave: não faz um teleporte disfarçado.
+  local duration = math.clamp(distance / 250, 0.45, 3.0)
 
   TerrorSharkTween = TweenService:Create(
     RootPart,
-    TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
+    TweenInfo.new(
+      duration,
+      Enum.EasingStyle.Linear,
+      Enum.EasingDirection.Out
+    ),
     {CFrame = targetCFrame}
   )
 
@@ -245,45 +259,61 @@ Attack.KillSea = function(model,Succes)
     and (Humanoid.Health / Humanoid.MaxHealth)
     or 0
 
-  -- Recuperação persistente: não volta a atacar enquanto estiver baixo.
-  if HealthRatio <= 0.50 then
+  -- Sempre limpa o modo de recuperação quando a vida já está cheia.
+  if HealthRatio >= 0.90 then
+    TerrorSharkRecovering = false
+  elseif HealthRatio <= 0.50 then
     TerrorSharkRecovering = true
   end
+
+  -- ==========================================================
+  -- RECUPERAÇÃO
+  -- ==========================================================
 
   if TerrorSharkRecovering then
     if HealthRatio >= 0.90 then
       TerrorSharkRecovering = false
     else
       TerrorSharkMove(
-        EnemyRoot.CFrame * CFrame.new(0,85,0),
-        0.35
+        EnemyRoot.CFrame * CFrame.new(0,65,0)
       )
-      task.wait(0.35)
+      task.wait(0.25)
       return
     end
   end
 
-  -- Dodge mantém uma janela segura em vez de voltar imediatamente.
+  -- ==========================================================
+  -- DODGE
+  -- Só considera a janela se ela ainda estiver ativa.
+  -- ==========================================================
+
   if State.TerrorDodgeUntil and tick() < State.TerrorDodgeUntil then
     TerrorSharkMove(
-      EnemyRoot.CFrame * CFrame.new(0,65,0),
-      0.25
+      EnemyRoot.CFrame * CFrame.new(0,45,0)
     )
-    task.wait(0.25)
+    task.wait(0.20)
     return
   end
 
-  -- Posição de ataque mais baixa.
+  State.TerrorDodgeUntil = nil
+
+  -- ==========================================================
+  -- ATAQUE
+  -- Bem mais baixo: 8 studs acima do Shark.
+  -- ==========================================================
+
   local AttackCFrame =
-    EnemyRoot.CFrame * CFrame.new(0,14,0)
+    EnemyRoot.CFrame * CFrame.new(0,8,0)
 
   MousePos = EnemyRoot.Position
   AitSeaSkill_Custom = EnemyRoot.CFrame
 
-  TerrorSharkMove(AttackCFrame,0.22)
-  task.wait(0.12)
+  TerrorSharkMove(AttackCFrame)
 
-  if not _G.TerrorShark or not EnemyRoot.Parent then
+  task.wait(0.10)
+
+  if not _G.TerrorShark
+  or not EnemyRoot.Parent then
     return
   end
 
@@ -298,10 +328,13 @@ Attack.KillSea = function(model,Succes)
     end)
   end
 
-  task.wait(0.10)
+  task.wait(0.12)
 end
 
--- Dodge listener baseado nos efeitos usados pela source de referência.
+-- ==========================================================
+-- DODGE LISTENER DO TERROR SHARK
+-- ==========================================================
+
 do
   local State = getgenv()
 
@@ -332,8 +365,16 @@ do
 
           if not targetRoot then return end
 
-          if (targetRoot.Position - obj.Position).Magnitude <= 25 then
-            State.TerrorDodgeUntil = tick() + 4
+          local Character = plr.Character
+          local RootPart =
+            Character and Character:FindFirstChild("HumanoidRootPart")
+
+          if not RootPart then return end
+
+          -- Só entra em dodge se o efeito realmente estiver
+          -- próximo do jogador.
+          if (RootPart.Position - obj.Position).Magnitude <= 45 then
+            State.TerrorDodgeUntil = tick() + 2.0
           end
         end)
     end
