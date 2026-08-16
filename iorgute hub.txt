@@ -1,75 +1,19 @@
---========================================================--
---              INICIALIZAÇÃO AUTOMÁTICA DO TIME
---========================================================--
-
-do
-    local Players = game:GetService("Players")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local LP = Players.LocalPlayer
-
-    repeat task.wait() until game:IsLoaded()
-    repeat task.wait() until LP
-
-    local commF = ReplicatedStorage
-        :WaitForChild("Remotes")
-        :WaitForChild("CommF_")
-
-    -- Se ainda não tiver time, escolhe Marines automaticamente.
-    -- O ChooseTeam é importante para a tela inicial do Blox Fruits.
-    if not LP.Team then
-        for i = 1, 30 do
-            pcall(function()
-                commF:InvokeServer("SetTeam", "Marines")
-                commF:InvokeServer("ChooseTeam", "Marines")
-            end)
-
-            task.wait(0.1)
-
-            if LP.Team then
-                break
-            end
-        end
-    end
-
-    -- Aguarda o Roblox confirmar o time antes de continuar.
-    local deadline = os.clock() + 8
-
-    while not LP.Team and os.clock() < deadline do
-        task.wait(0.1)
-    end
-
-    -- Dá tempo para o personagem/GUI terminarem de carregar.
-    task.wait(1.5)
-end
-
-
---========================================================--
---                    AUTO-LOAD ORIGINAL
---========================================================--
-
 task.spawn(function()
+    local HttpService = game:GetService("HttpService")
     local Players = game:GetService("Players")
     local LP = Players.LocalPlayer
 
     repeat task.wait() until game:IsLoaded()
-    repeat task.wait() until LP
-        and LP.Character
-        and LP.Team
-
-    -- Garante que o time/personagem estabilizou.
-    task.wait(1)
+    repeat task.wait() until LP and LP.Character
 
     local success, err = pcall(function()
-        loadstring(game:HttpGet(
-            "https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby"
-        ))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby"))()
     end)
 
     if not success then
         warn("Falha ao executar auto-load:", err)
     end
 end)
-
 
 do
   ply = game.Players
@@ -188,30 +132,102 @@ Attack.Kill2 = function(model,Succes)
   if RandomCFrame then wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(25, 30, 0)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(-25, 30 ,0)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25)) wait(0.1)_tp(model.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0))end
   end
 end
-Attack.KillSea = function(model,Succes)
-  if model and Succes then
-  if not model:GetAttribute("Locked") then model:SetAttribute("Locked",model.HumanoidRootPart.CFrame) end
+Attack.KillSea = function(model, Succes)
+  if not model or not Succes then return end
+
+  local Character = plr.Character
+  local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+  local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+  local EnemyRoot = model:FindFirstChild("HumanoidRootPart")
+
+  if not Root or not Humanoid or not EnemyRoot then return end
+
+  if not model:GetAttribute("Locked") then
+    model:SetAttribute("Locked", EnemyRoot.CFrame)
+  end
+
   PosMon = model:GetAttribute("Locked").Position
   BringEnemy()
   EquipWeapon(_G.SelectWeapon)
-  local Equipped = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-  local ToolTip = Equipped.ToolTip
-  local PlayerHumanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
-local LowHealth = PlayerHumanoid
-    and PlayerHumanoid.MaxHealth > 0
-    and (PlayerHumanoid.Health / PlayerHumanoid.MaxHealth) <= 0.40
 
-if LowHealth then
-    -- Proteção do Terror Shark: fica afastado enquanto a vida estiver baixa.
-    -- O retorno só acontece depois que a vida subir novamente.
-    notween(model.HumanoidRootPart.CFrame * CFrame.new(0,45,18))
-    wait(0.50)
-elseif ToolTip == "Blox Fruit" then
-    _tp(model.HumanoidRootPart.CFrame * CFrame.new(0,10,0) * CFrame.Angles(0,math.rad(90),0))
-else
-    -- Terror Shark: mantém o personagem em uma altura fixa para o M1.
-    notween(model.HumanoidRootPart.CFrame * CFrame.new(0,10,8))
-    wait(0.15)
+  local Dangerous = false
+  local DangerPosition = nil
+
+  -- Detecta efeitos de ataque do Terror Shark sem assumir que eles
+  -- existam o tempo todo.
+  for _, obj in ipairs(workspace:GetDescendants()) do
+    if obj:IsA("BasePart") then
+      local Name = string.lower(obj.Name)
+
+      if string.find(Name,"sharksplash")
+      or string.find(Name,"chargeup")
+      or string.find(Name,"sharkcharge") then
+
+        local Distance = (obj.Position - Root.Position).Magnitude
+
+        if Distance <= 80 then
+          Dangerous = true
+          DangerPosition = obj.Position
+          break
+        end
+      end
+    end
+  end
+
+  local LowHealth =
+    Humanoid.MaxHealth > 0
+    and (Humanoid.Health / Humanoid.MaxHealth) <= 0.40
+
+  if LowHealth then
+    notween(
+      EnemyRoot.CFrame * CFrame.new(0,55,25)
+    )
+    return
+  end
+
+  if Dangerous then
+    local Direction
+
+    if DangerPosition then
+      Direction = Root.Position - DangerPosition
+
+      if Direction.Magnitude > 0 then
+        Direction = Direction.Unit
+      else
+        Direction = Vector3.new(0,0,1)
+      end
+    else
+      Direction = Vector3.new(0,0,1)
+    end
+
+    local AwayPosition =
+      Root.Position
+      + Direction * 70
+      + Vector3.new(0,35,0)
+
+    notween(CFrame.new(AwayPosition))
+    task.wait(0.25)
+    return
+  end
+
+  local Equipped = Character:FindFirstChildOfClass("Tool")
+  local ToolTip = Equipped and Equipped.ToolTip or ""
+
+  if ToolTip == "Blox Fruit" then
+    notween(
+      EnemyRoot.CFrame
+      * CFrame.new(0,12,0)
+      * CFrame.Angles(0,math.rad(90),0)
+    )
+  else
+    notween(
+      EnemyRoot.CFrame
+      * CFrame.new(0,12,8)
+      * CFrame.Angles(0,math.rad(180),0)
+    )
+  end
+
+  task.wait(0.12)
 end
   end
 end
@@ -4253,34 +4269,13 @@ spawn(function()
 end)
 local AutoTreinarV4 = Tabs.Mirage:AddToggle("AutoTreinarV4", {
     Title = "Auto Treinar V4",
-    Description = "Farm de energia + ativação da V4 + compra automática dos upgrades",
+    Description = "Farm de energia + ativação da V4 + upgrade do tier",
     Default = false
 })
 
 AutoTreinarV4:OnChanged(function(Value)
     _G.AcientOne = Value
 end)
-
--- Evita spam no servidor: tenta comprar no máximo uma vez a cada 2 segundos.
-local LastRaceUpgradeAttempt = 0
-
-local function TryUpgradeRace()
-    if not _G.AcientOne then
-        return
-    end
-
-    if os.clock() - LastRaceUpgradeAttempt < 2 then
-        return
-    end
-
-    LastRaceUpgradeAttempt = os.clock()
-
-    pcall(function()
-        -- O servidor só conclui a compra quando o próximo treinamento
-        -- estiver realmente disponível.
-        replicated.Remotes.CommF_:InvokeServer("UpgradeRace", "Buy")
-    end)
-end
 
 task.spawn(function()
     while task.wait(0.2) do
@@ -4294,25 +4289,25 @@ task.spawn(function()
                 local RaceEnergy = Character:FindFirstChild("RaceEnergy")
                 local RaceTransformed = Character:FindFirstChild("RaceTransformed")
 
+                -- O personagem ainda não possui os valores da V4.
                 if not RaceEnergy or not RaceTransformed then
                     return
                 end
 
-                -- Verifica continuamente se o próximo treinamento já pode ser comprado.
-                TryUpgradeRace()
-
-                -- Energia cheia: ativa a V4.
-                if RaceEnergy.Value >= 1 and RaceTransformed.Value == false then
+                -- Energia cheia: ativa a V4 usando a mesma função do hub.
+                if RaceEnergy.Value == 1 and RaceTransformed.Value == false then
                     Useskills("nil", "Y")
                     task.wait(1)
 
-                    -- Tenta comprar logo depois da ativação.
-                    TryUpgradeRace()
+                    -- Depois de ativar, tenta comprar o próximo upgrade do tier.
+                    if RaceTransformed.Value == true then
+                        replicated.Remotes.CommF_:InvokeServer("UpgradeRace", "Buy")
+                    end
 
                     return
                 end
 
-                -- Enquanto não estiver transformado, procura os NPCs do treino.
+                -- Enquanto não estiver transformado, procura os NPCs usados para o treino.
                 if RaceTransformed.Value == false then
                     local BonesTable = {
                         "Reborn Skeleton",
@@ -4348,7 +4343,6 @@ task.spawn(function()
         end
     end
 end)
-
 Tabs.Mirage:AddButton({
     Title = "Teleporte Pro Temple of Time",
     Description = "",
@@ -5680,7 +5674,33 @@ spawn(function()
   while wait() do
     pcall(function()	
       if _G.Shark then local a={"Shark"}if CheckShark()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.Shark)until _G.Shark==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
-      if _G.TerrorShark then local a={"Terrorshark"}if CheckTerrorShark()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.KillSea(c,_G.TerrorShark)until _G.TerrorShark==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
+      if _G.TerrorShark then
+  local TerrorShark = nil
+
+  for _, c in pairs(workspace.Enemies:GetChildren()) do
+    if c.Name == "Terrorshark" and Attack.Alive(c) then
+      TerrorShark = c
+      break
+    end
+  end
+
+  if TerrorShark then
+    repeat
+      task.wait()
+
+      if not _G.TerrorShark
+      or not TerrorShark.Parent
+      or not Attack.Alive(TerrorShark) then
+        break
+      end
+
+      Attack.KillSea(TerrorShark,true)
+
+    until not _G.TerrorShark
+    or not TerrorShark.Parent
+    or not Attack.Alive(TerrorShark)
+  end
+end
       if _G.Piranha then local a={"Piranha"}if CheckPiranha()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.Piranha)until _G.Piranha==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
       if _G.MobCrew then local a={"Fish Crew Member"}if CheckFishCrew()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.MobCrew)until _G.MobCrew==false or not c.Parent or c.Humanoid.Health<=0 end end end end end                 
       if _G.HCM then local a={"Haunted Crew Member"}if CheckHauntedCrew()then for b,c in pairs(workspace.Enemies:GetChildren())do if table.find(a,c.Name)then if Attack.Alive(c)then repeat task.wait()Attack.Kill(c,_G.HCM)until _G.HCM==false or not c.Parent or c.Humanoid.Health<=0 end end end end end
