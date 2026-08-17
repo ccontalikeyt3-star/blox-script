@@ -335,223 +335,53 @@ Attack.KillSea = function(model,Succes)
 end
 
 -- ==========================================================
--- DIAGNOSTICO DOS ATAQUES DO TERROR SHARK
--- SOMENTE MONITORAMENTO: não altera posição nem faz dodge.
--- Logs limitados para não inundar o console.
+-- DODGE LISTENER DO TERROR SHARK
 -- ==========================================================
 
 do
   local State = getgenv()
 
-  if State.TerrorDiagnosticConnections then
-    for _,connection in pairs(State.TerrorDiagnosticConnections) do
-      pcall(function()
-        connection:Disconnect()
-      end)
-    end
-  end
+  if not State.TerrorDodgeConnection then
+    State.TerrorDodgeUntil = 0
 
-  State.TerrorDiagnosticConnections = {}
-  State.TerrorDiagnosticLast = {}
-  State.TerrorDiagnosticLastSpeed = 0
-  State.TerrorDiagnosticLastSpeedTime = 0
+    local WorldOrigin = workspace:FindFirstChild("_WorldOrigin")
 
-  local function TSLog(message)
-    print("[TERROR SHARK] " .. message)
-  end
+    if WorldOrigin then
+      State.TerrorDodgeConnection =
+        WorldOrigin.ChildAdded:Connect(function(obj)
 
-  local function GetTerror()
-    local enemies = workspace:FindFirstChild("Enemies")
-    if not enemies then return nil end
-    return enemies:FindFirstChild("Terrorshark")
-  end
+          if not _G.TerrorShark then return end
+          if not obj:IsA("BasePart") then return end
 
-  local function GetRoot(model)
-    return model and model:FindFirstChild("HumanoidRootPart")
-  end
-
-  -- Detecta efeitos criados pelo jogo.
-  local WorldOrigin = workspace:FindFirstChild("_WorldOrigin")
-
-  if WorldOrigin then
-    table.insert(
-      State.TerrorDiagnosticConnections,
-      WorldOrigin.ChildAdded:Connect(function(obj)
-
-        local name = obj.Name
-        local lower = string.lower(name)
-
-        -- Não registra qualquer objeto: somente nomes
-        -- potencialmente relacionados ao ataque.
-        local Relevant =
-          lower == "sharksplash"
-          or lower == "chargeup"
-          or string.find(lower,"shark")
-          or string.find(lower,"charge")
-          or string.find(lower,"splash")
-          or string.find(lower,"typhoon")
-
-        if not Relevant then
-          return
-        end
-
-        local now = tick()
-        local last = State.TerrorDiagnosticLast[name] or 0
-
-        -- Mesmo efeito: no máximo 1 log a cada 0.35s.
-        if now - last < 0.35 then
-          return
-        end
-
-        State.TerrorDiagnosticLast[name] = now
-
-        local pos = nil
-
-        if obj:IsA("BasePart") then
-          pos = obj.Position
-        elseif obj:IsA("Model") then
-          local pp = obj.PrimaryPart
-          if pp then
-            pos = pp.Position
+          if obj.Name ~= "SharkSplash"
+          and obj.Name ~= "ChargeUp" then
+            return
           end
-        end
 
-        local target = GetTerror()
-        local targetRoot = GetRoot(target)
-        local player = plr.Character
-        local playerRoot = player and player:FindFirstChild("HumanoidRootPart")
+          local target =
+            workspace.Enemies:FindFirstChild("Terrorshark")
 
-        local distance = "?"
-        local targetDistance = "?"
+          if not target then return end
 
-        if pos and playerRoot then
-          distance = string.format("%.1f",(playerRoot.Position-pos).Magnitude)
-        end
+          local targetRoot =
+            target:FindFirstChild("HumanoidRootPart")
 
-        if pos and targetRoot then
-          targetDistance = string.format("%.1f",(targetRoot.Position-pos).Magnitude)
-        end
+          if not targetRoot then return end
 
-        TSLog(
-          "EFEITO: "
-          .. name
-          .. " | distância jogador="
-          .. distance
-          .. " | distância Shark="
-          .. targetDistance
-        )
-      end)
-    )
-  end
+          local Character = plr.Character
+          local RootPart =
+            Character and Character:FindFirstChild("HumanoidRootPart")
 
-  -- Monitora velocidade do Terror Shark.
-  -- Útil para descobrir o início do Super Charge sem spam.
-  local SpeedConnection
+          if not RootPart then return end
 
-  SpeedConnection = game:GetService("RunService").Heartbeat:Connect(function()
-    if not _G.TerrorShark then
-      return
-    end
-
-    local target = GetTerror()
-    local root = GetRoot(target)
-
-    if not root then
-      return
-    end
-
-    local speed = root.AssemblyLinearVelocity.Magnitude
-
-    if speed >= 80 then
-      local now = tick()
-
-      if now - State.TerrorDiagnosticLastSpeedTime >= 0.50 then
-        State.TerrorDiagnosticLastSpeedTime = now
-
-        TSLog(
-          "VELOCIDADE ALTA: "
-          .. string.format("%.1f",speed)
-          .. " studs/s"
-        )
-      end
-    end
-  end)
-
-  table.insert(State.TerrorDiagnosticConnections,SpeedConnection)
-
-  -- Monitora mudanças de estado do Humanoid.
-  local function ConnectHumanoid()
-
-    local target = GetTerror()
-    if not target then return end
-
-    local humanoid = target:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return end
-
-    if State.TerrorDiagnosticHumanoid == humanoid then
-      return
-    end
-
-    State.TerrorDiagnosticHumanoid = humanoid
-
-    table.insert(
-      State.TerrorDiagnosticConnections,
-      humanoid.StateChanged:Connect(function(oldState,newState)
-
-        TSLog(
-          "HUMANOID STATE: "
-          .. tostring(oldState)
-          .. " -> "
-          .. tostring(newState)
-        )
-      end)
-    )
-
-    local animator = humanoid:FindFirstChildOfClass("Animator")
-
-    if animator then
-      table.insert(
-        State.TerrorDiagnosticConnections,
-        animator.AnimationPlayed:Connect(function(track)
-
-          local name = track.Name or "Animation"
-          local id = "?"
-
-          pcall(function()
-            id = track.Animation.AnimationId
-          end)
-
-          TSLog(
-            "ANIMAÇÃO: "
-            .. tostring(name)
-            .. " | ID="
-            .. tostring(id)
-          )
+          -- Só entra em dodge se o efeito realmente estiver
+          -- próximo do jogador.
+          if (RootPart.Position - obj.Position).Magnitude <= 45 then
+            State.TerrorDodgeUntil = tick() + 2.0
+          end
         end)
-      )
     end
   end
-
-  -- Tenta conectar agora e também quando o Shark nascer.
-  ConnectHumanoid()
-
-  table.insert(
-    State.TerrorDiagnosticConnections,
-    workspace.Enemies.ChildAdded:Connect(function(child)
-
-      if child.Name ~= "Terrorshark" then
-        return
-      end
-
-      task.wait(0.10)
-
-      TSLog("TERROR SHARK APARECEU")
-
-      ConnectHumanoid()
-    end)
-  )
-
-  TSLog("Diagnóstico iniciado. Nenhum dodge será executado.")
 end
 
 Attack.Sword = function(model,Succes)
