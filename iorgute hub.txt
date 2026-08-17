@@ -243,12 +243,54 @@ Attack.KillSea = function(model,Succes)
 
   if not Root or not Humanoid or not EnemyRoot then return end
 
+  -- ==========================================================
+  -- SAIR DO BARCO ANTES DE LUTAR
+  -- Evita o Tween disputar posição com o SeatWeld/VehicleSeat.
+  -- ==========================================================
+
+  local State = getgenv()
+
+  if Humanoid.Sit or Humanoid.SeatPart then
+    local SeatPart = Humanoid.SeatPart
+
+    pcall(function()
+      Humanoid.Sit = false
+    end)
+
+    if SeatPart then
+      pcall(function()
+        local SeatWeld = SeatPart:FindFirstChild("SeatWeld")
+        if SeatWeld then
+          SeatWeld:Destroy()
+        end
+      end)
+    end
+
+    pcall(function()
+      Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end)
+
+    task.wait(0.10)
+
+    -- Pequeno deslocamento para cima para garantir que o RootPart
+    -- deixe de ficar preso ao barco antes do Tween de ataque.
+    if Root.Parent then
+      pcall(function()
+        Root.CFrame = Root.CFrame + Vector3.new(0, 8, 0)
+      end)
+    end
+
+    State.TSErrorBoatReleased = tick()
+
+    print("[TS BOAT] Jogador saiu do barco antes do combate.")
+  end
+
+
   if not model:GetAttribute("Locked") then
     model:SetAttribute("Locked",EnemyRoot.CFrame)
   end
 
   PosMon = model:GetAttribute("Locked").Position
-  BringEnemy()
   EquipWeapon(_G.SelectWeapon)
 
   local Equipped = Character:FindFirstChildOfClass("Tool")
