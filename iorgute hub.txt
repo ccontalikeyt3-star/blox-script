@@ -6206,6 +6206,112 @@ local Q = Tabs.SeaEvent:AddToggle("Q", {Title = "Auto Sail Boat", Description = 
 Q:OnChanged(function(Value)
   _G.SailBoats = Value
 end)
+
+-- ==========================================================
+-- AUTO RESET QUANDO O BARCO QUEBRAR
+-- Opcional: fica logo abaixo do Auto Sail Boat.
+-- ==========================================================
+
+local ResetBoatToggle = Tabs.SeaEvent:AddToggle(
+  "ResetBoatWhenBroken",
+  {
+    Title = "Resetar quando barco quebrar",
+    Description = "Reseta o personagem quando o barco desaparecer durante o Auto Sail.",
+    Default = false
+  }
+)
+
+ResetBoatToggle:OnChanged(function(Value)
+  _G.ResetBoatWhenBroken = Value
+end)
+
+task.spawn(function()
+
+  local boatWasPresent = false
+  local resetCooldown = 0
+  local lastBoat = nil
+
+  while task.wait(0.35) do
+
+    if not _G.ResetBoatWhenBroken or not _G.SailBoats then
+      boatWasPresent = false
+      lastBoat = nil
+      continue
+    end
+
+    -- Durante combate com Terror Shark não queremos que esse
+    -- monitor interprete a situação como uma quebra do barco.
+    if getgenv().TSErrorBoatCombat then
+      continue
+    end
+
+    local boat = nil
+
+    pcall(function()
+      boat = CheckBoat()
+    end)
+
+    if boat then
+
+      boatWasPresent = true
+      lastBoat = boat
+
+    elseif boatWasPresent then
+
+      -- Só considera quebra depois de o barco ter sido encontrado
+      -- anteriormente. Isso evita resetar no início, antes de comprar.
+      local Character = plr.Character
+      local Humanoid =
+        Character and Character:FindFirstChildOfClass("Humanoid")
+      local Root =
+        Character and Character:FindFirstChild("HumanoidRootPart")
+
+      if Humanoid and Root
+      and tick() >= resetCooldown then
+
+        -- Ponto usado pelo Auto Sail para comprar o barco.
+        local BuyBoatPosition =
+          Vector3.new(-16927.451, 9.086, 433.864)
+
+        local distance =
+          (Root.Position - BuyBoatPosition).Magnitude
+
+        -- Se já estiver perto do ponto de compra, não precisa resetar.
+        -- Se estiver muito longe, o reset evita a viagem de volta.
+        if distance > 1000 then
+
+          resetCooldown = tick() + 8
+          boatWasPresent = false
+          lastBoat = nil
+
+          print(
+            "[TS BOAT RESET] Barco desapareceu"
+            .. " | Distância Tiki="
+            .. string.format("%.0f", distance)
+            .. " | Resetando personagem."
+          )
+
+          pcall(function()
+            Humanoid.Sit = false
+          end)
+
+          pcall(function()
+            Humanoid.Health = 0
+          end)
+
+        else
+
+          -- Se estiver perto, apenas deixa o Auto Sail comprar
+          -- outro barco sem forçar reset.
+          boatWasPresent = false
+          lastBoat = nil
+
+        end
+      end
+    end
+  end
+end)
+
 spawn(function()
   while wait() do
     if _G.SailBoats then 
