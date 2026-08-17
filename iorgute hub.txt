@@ -236,8 +236,6 @@ end
 Attack.KillSea = function(model,Succes)
   if not model or not Succes then return end
 
-  -- Enquanto houver combate com Terror Shark, os loops de barco
-  -- não podem tentar colocar o personagem de volta no VehicleSeat.
   _G.TSErrorBoatCombat = true
 
   local Character = plr.Character
@@ -247,67 +245,29 @@ Attack.KillSea = function(model,Succes)
 
   if not Root or not Humanoid or not EnemyRoot then return end
 
-  -- ==========================================================
-  -- SAIR DO BARCO ANTES DE LUTAR
-  -- Evita o Tween disputar posição com o SeatWeld/VehicleSeat.
-  -- ==========================================================
-
-  local State = getgenv()
-
+  -- Enquanto o Auto Terror Shark estiver ativo, não permita que o personagem
+  -- permaneça preso ao piloto do barco. O loop do barco também é bloqueado.
   if Humanoid.Sit or Humanoid.SeatPart then
-    local SeatPart = Humanoid.SeatPart
-
-    -- Primeiro cancela o estado sentado.
-    pcall(function()
-      Humanoid.Sit = false
-    end)
-
-    -- Tenta destruir o SeatWeld no assento.
-    if SeatPart then
+    local seat = Humanoid.SeatPart
+    pcall(function() Humanoid.Sit = false end)
+    pcall(function() Humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end)
+    if seat then
       pcall(function()
-        local SeatWeld = SeatPart:FindFirstChild("SeatWeld")
-        if SeatWeld then
-          SeatWeld:Destroy()
-        end
+        local weld = seat:FindFirstChild("SeatWeld")
+        if weld then weld:Destroy() end
       end)
     end
-
-    -- Também procura SeatWeld no personagem, caso o jogo tenha
-    -- criado o vínculo nesse lado.
     pcall(function()
-      local CharacterSeatWeld = Character:FindFirstChild("SeatWeld", true)
-      if CharacterSeatWeld then
-        CharacterSeatWeld:Destroy()
-      end
+      local weld = Character:FindFirstChild("SeatWeld", true)
+      if weld then weld:Destroy() end
     end)
-
+    task.wait(0.08)
     pcall(function()
-      Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-    end)
-
-    task.wait(0.15)
-
-    -- Garante que o personagem fique fora da geometria do barco.
-    if Root.Parent then
-      pcall(function()
-        Root.CFrame = Root.CFrame + Vector3.new(0, 12, 0)
-        Root.AssemblyLinearVelocity = Vector3.new(0, 25, 0)
-      end)
-    end
-
-    -- Confirma que o Humanoid não voltou ao assento.
-    task.wait(0.10)
-
-    pcall(function()
+      Root.CFrame = Root.CFrame + Vector3.new(0, 15, 0)
+      Root.AssemblyLinearVelocity = Vector3.new(0, 35, 0)
       Humanoid.Sit = false
-      Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
     end)
-
-    State.TSErrorBoatReleased = tick()
-
-    print("[TS BOAT] Jogador saiu do barco. Combat lock ativo.")
   end
-
 
   if not model:GetAttribute("Locked") then
     model:SetAttribute("Locked",EnemyRoot.CFrame)
@@ -4125,7 +4085,7 @@ spawn(function()
             TeleportToTarget(buyBoatCFrame)
             if (buyBoatCFrame.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 then replicated.Remotes.CommF_:InvokeServer("BuyBoat", _G.SelectedBoat) end
           else
-            if plr.Character.Humanoid.Sit == false and not _G.TSErrorBoatCombat then
+            if plr.Character.Humanoid.Sit == false and not _G.TSErrorBoatCombat and not _G.TerrorShark then
               local boatSeatCFrame = myBoat.VehicleSeat.CFrame * CFrame.new(0, 1, 0)
               _tp(boatSeatCFrame)
             else            
@@ -5646,7 +5606,7 @@ spawn(function()
             TeleportToTarget(buyBoatCFrame)
             if (buyBoatCFrame.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 then replicated.Remotes.CommF_:InvokeServer("BuyBoat", _G.SelectedBoat) end
           else
-            if plr.Character.Humanoid.Sit == false and not _G.TSErrorBoatCombat then
+            if plr.Character.Humanoid.Sit == false and not _G.TSErrorBoatCombat and not _G.TerrorShark then
               local boatSeatCFrame = myBoat.VehicleSeat.CFrame * CFrame.new(0, 1, 0)
               _tp(boatSeatCFrame)
             else                            
@@ -5848,7 +5808,7 @@ spawn(function()
           TeleportToTarget(buyBoatCFrame)
           if (buyBoatCFrame.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 then replicated.Remotes.CommF_:InvokeServer("BuyBoat", _G.SelectedBoat) end
         elseif myBoat then
-          if plr.Character.Humanoid.Sit == false and not _G.TSErrorBoatCombat then
+          if plr.Character.Humanoid.Sit == false and not _G.TSErrorBoatCombat and not _G.TerrorShark then
             local boatSeatCFrame = myBoat.VehicleSeat.CFrame * CFrame.new(0, 1, 0)
             _tp(boatSeatCFrame)
           else                         
@@ -5891,7 +5851,7 @@ spawn(function()
           TeleportToTarget(buyBoatCFrame)
           if (buyBoatCFrame.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 then replicated.Remotes.CommF_:InvokeServer("BuyBoat", _G.SelectedBoat) end
         elseif myBoat and not(CheckShark()and _G.Shark or CheckTerrorShark()and _G.TerrorShark or CheckFishCrew()and _G.MobCrew or CheckPiranha()and _G.Piranha)and not(CheckEnemiesBoat()and _G.FishBoat)and not(CheckSeaBeast()and _G.SeaBeast1)and not(_G.PGB and CheckPirateGrandBrigade())and not(_G.HCM and CheckHauntedCrew())and not(_G.Leviathan1 and CheckLeviathan())then
-          if plr.Character.Humanoid.Sit == false and not _G.TSErrorBoatCombat then
+          if plr.Character.Humanoid.Sit == false and not _G.TSErrorBoatCombat and not _G.TerrorShark then
             local boatSeatCFrame = myBoat.VehicleSeat.CFrame * CFrame.new(0, 1, 0)
             _tp(boatSeatCFrame)
           else                         
@@ -5917,39 +5877,6 @@ spawn(function()
   end
 end)
 spawn(function()while wait(Sec)do pcall(function()for a,b in pairs(workspace.Boats:GetChildren())do for c,d in pairs(workspace.Boats[b.Name]:GetDescendants())do if d:IsA("BasePart")then if _G.SailBoats or _G.Prehis_Find or _G.FindMirage or _G.SailBoat_Hydra or _G.AutofindKitIs then d.CanCollide=false else d.CanCollide=true end end end end end)end end)
-
--- ==========================================================
--- TERROR SHARK: LIBERAR LOCK DO BARCO
--- ==========================================================
-
-task.spawn(function()
-  while task.wait(0.5) do
-    if not _G.TerrorShark then
-      _G.TSErrorBoatCombat = false
-    else
-      local enemies = workspace:FindFirstChild("Enemies")
-      local hasTerror = false
-
-      if enemies then
-        for _, enemy in ipairs(enemies:GetChildren()) do
-          if enemy.Name == "Terrorshark" then
-            local root = enemy:FindFirstChild("HumanoidRootPart")
-            local health = enemy:FindFirstChild("Health")
-
-            if root and (not health or health.Value > 0) then
-              hasTerror = true
-              break
-            end
-          end
-        end
-      end
-
-      if not hasTerror then
-        _G.TSErrorBoatCombat = false
-      end
-    end
-  end
-end)
 
 Tabs.SeaEvent:AddSection("Entity Sea Event")
 Q = Tabs.SeaEvent:AddToggle("Q", {Title = "Auto Shark", Description = "", Default = false})
@@ -6056,7 +5983,7 @@ spawn(function()
             TeleportToTarget(buyBoatCFrame)
             if (buyBoatCFrame.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 then replicated.Remotes.CommF_:InvokeServer("BuyBoat", _G.SelectedBoat) end
           else
-            if plr.Character.Humanoid.Sit == false and not _G.TSErrorBoatCombat then
+            if plr.Character.Humanoid.Sit == false and not _G.TSErrorBoatCombat and not _G.TerrorShark then
               local boatSeatCFrame = myBoat.VehicleSeat.CFrame * CFrame.new(0, 1, 0)
               _tp(boatSeatCFrame)
             else
