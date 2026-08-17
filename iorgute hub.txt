@@ -248,10 +248,7 @@ Attack.KillSea = function(model,Succes)
   end
 
   PosMon = model:GetAttribute("Locked").Position
-
-  -- NÃO usa BringEnemy no Terror Shark.
-  -- BringEnemy agrupa TODOS os NPCs vivos em até 300 studs,
-  -- o que também puxa os NPCs/entidades dos Sea Events para o mesmo ponto.
+  BringEnemy()
   EquipWeapon(_G.SelectWeapon)
 
   local Equipped = Character:FindFirstChildOfClass("Tool")
@@ -286,27 +283,31 @@ Attack.KillSea = function(model,Succes)
   end
 
   -- ==========================================================
-  -- DODGE
-  -- Só considera a janela se ela ainda estiver ativa.
+  -- DODGE DE TESTE: CHARGEUP
   -- ==========================================================
 
-  if State.TerrorDodgeUntil and tick() < State.TerrorDodgeUntil then
+  if State.TSErrorDodgeUntil
+  and tick() < State.TSErrorDodgeUntil then
+
+    -- Sai da área do ataque sem usar teleporte instantâneo.
     TerrorSharkMove(
-      EnemyRoot.CFrame * CFrame.new(0,45,0)
+      EnemyRoot.CFrame * CFrame.new(0,70,0),
+      0.18
     )
-    task.wait(0.20)
+
+    task.wait(0.18)
     return
   end
 
-  State.TerrorDodgeUntil = nil
+  State.TSErrorDodgeUntil = nil
 
   -- ==========================================================
   -- ATAQUE
-  -- Mantém o personagem dentro da distância curta de ataque.
+  -- Bem mais baixo: 8 studs acima do Shark.
   -- ==========================================================
 
   local AttackCFrame =
-    EnemyRoot.CFrame * CFrame.new(0,10,0)
+    EnemyRoot.CFrame * CFrame.new(0,8,0)
 
   MousePos = EnemyRoot.Position
   AitSeaSkill_Custom = EnemyRoot.CFrame
@@ -335,54 +336,97 @@ Attack.KillSea = function(model,Succes)
 end
 
 -- ==========================================================
--- DODGE LISTENER DO TERROR SHARK
+-- TERROR SHARK - DODGE TESTE POR CHARGEUP
 -- ==========================================================
 
 do
   local State = getgenv()
 
-  if not State.TerrorDodgeConnection then
-    State.TerrorDodgeUntil = 0
+  if State.TSErrorDodgeConnection then
+    pcall(function()
+      State.TSErrorDodgeConnection:Disconnect()
+    end)
+  end
 
-    local WorldOrigin = workspace:FindFirstChild("_WorldOrigin")
+  State.TSErrorDodgeUntil = 0
 
-    if WorldOrigin then
-      State.TerrorDodgeConnection =
-        WorldOrigin.ChildAdded:Connect(function(obj)
+  local WorldOrigin = workspace:FindFirstChild("_WorldOrigin")
 
-          if not _G.TerrorShark then return end
-          if not obj:IsA("BasePart") then return end
+  if WorldOrigin then
+    State.TSErrorDodgeConnection =
+      WorldOrigin.ChildAdded:Connect(function(obj)
 
-          if obj.Name ~= "SharkSplash"
-          and obj.Name ~= "ChargeUp" then
-            return
+        if not _G.TerrorShark then
+          return
+        end
+
+        if not obj:IsA("BasePart") then
+          return
+        end
+
+        -- Neste teste SOMENTE ChargeUp dispara o dodge.
+        if obj.Name ~= "ChargeUp" then
+          return
+        end
+
+        local enemies = workspace:FindFirstChild("Enemies")
+        if not enemies then
+          return
+        end
+
+        local Character = plr.Character
+        local RootPart =
+          Character and Character:FindFirstChild("HumanoidRootPart")
+
+        if not RootPart then
+          return
+        end
+
+        -- Escolhe o Terrorshark mais próximo do jogador.
+        local closestDistance = math.huge
+        local closestRoot = nil
+
+        for _, enemy in ipairs(enemies:GetChildren()) do
+          if enemy.Name == "Terrorshark" then
+
+            local enemyRoot =
+              enemy:FindFirstChild("HumanoidRootPart")
+
+            if enemyRoot then
+
+              local distance =
+                (RootPart.Position - enemyRoot.Position).Magnitude
+
+              if distance < closestDistance then
+                closestDistance = distance
+                closestRoot = enemyRoot
+              end
+            end
           end
+        end
 
-          local target =
-            workspace.Enemies:FindFirstChild("Terrorshark")
+        if not closestRoot then
+          return
+        end
 
-          if not target then return end
+        -- Os testes mostraram ~13 studs no momento do ChargeUp.
+        -- 25 studs dá uma pequena margem sem reagir a Sharks distantes.
+        if closestDistance <= 25 then
 
-          local targetRoot =
-            target:FindFirstChild("HumanoidRootPart")
+          State.TSErrorDodgeUntil =
+            tick() + 1.20
 
-          if not targetRoot then return end
-
-          local Character = plr.Character
-          local RootPart =
-            Character and Character:FindFirstChild("HumanoidRootPart")
-
-          if not RootPart then return end
-
-          -- Só entra em dodge se o efeito realmente estiver
-          -- próximo do jogador.
-          if (RootPart.Position - obj.Position).Magnitude <= 45 then
-            State.TerrorDodgeUntil = tick() + 2.0
-          end
-        end)
-    end
+          print(
+            "[TS DODGE TEST] ChargeUp detectado"
+            .. " | DistShark="
+            .. string.format("%.1f", closestDistance)
+            .. " | Dodge=1.20s"
+          )
+        end
+      end)
   end
 end
+
 
 Attack.Sword = function(model,Succes)
   if model and Succes then
