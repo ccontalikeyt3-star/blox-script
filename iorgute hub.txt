@@ -354,9 +354,9 @@ Attack.KillSea = function(model,Succes)
   if State.TSErrorDodgeUntil
   and tick() < State.TSErrorDodgeUntil then
 
-    -- Sai da área do ataque sem usar teleporte instantâneo.
+    -- Sai da área do ataque sem usar teleporte instantâneo: 90 studs.
     TerrorSharkMove(
-      EnemyRoot.CFrame * CFrame.new(0,70,0),
+      EnemyRoot.CFrame * CFrame.new(0,90,0),
       0.18
     )
 
@@ -368,11 +368,11 @@ Attack.KillSea = function(model,Succes)
 
   -- ==========================================================
   -- ATAQUE
-  -- Bem mais baixo: 8 studs acima do Shark.
+  -- Posição de ataque de teste: 40 studs acima do Shark.
   -- ==========================================================
 
   local AttackCFrame =
-    EnemyRoot.CFrame * CFrame.new(0,8,0)
+    EnemyRoot.CFrame * CFrame.new(0,40,0)
 
   MousePos = EnemyRoot.Position
   AitSeaSkill_Custom = EnemyRoot.CFrame
