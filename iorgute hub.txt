@@ -5020,47 +5020,76 @@ GetSeaBeastTrial = function()
 end
 spawn(function()
     local MinkTrialDone = false
+    local MinkTrialMoving = false
 
     while task.wait(Sec) do
         pcall(function()
 
             if not _G.Complete_Trials then
                 MinkTrialDone = false
+                MinkTrialMoving = false
                 return
             end
 
             if tostring(plr.Data.Race.Value) ~= "Mink" then
                 MinkTrialDone = false
+                MinkTrialMoving = false
                 return
             end
 
-            -- Já foi até o ponto da Mink Trial.
-            -- Não manda novamente.
-            if MinkTrialDone then
+            -- Depois de concluir o movimento, não manda o personagem
+            -- novamente para a trial. A posição final fica mantida.
+            if MinkTrialDone or MinkTrialMoving then
                 return
             end
 
             local minkTrial = workspace.Map:FindFirstChild("MinkTrial")
-
             if not minkTrial then
                 return
             end
 
             local ceiling = minkTrial:FindFirstChild("Ceiling")
-
             if not ceiling then
                 return
             end
 
             local target = ceiling.CFrame * CFrame.new(0, -20, 0)
+            MinkTrialMoving = true
 
-            print("[Race V4] Indo para a Trial da Mink...")
+            print("[Race V4] Indo para a Trial da Mink com Tween...")
 
-            notween(target)
+            -- Usa o sistema de Tween do próprio Iorgute.
+            _tp(target)
 
+            -- Aguarda o fim real do movimento antes de marcar como concluído.
+            local startTime = tick()
+            while task.wait(0.05) do
+                if not _G.Complete_Trials then
+                    MinkTrialMoving = false
+                    return
+                end
+
+                local character = plr.Character
+                local root = character and character:FindFirstChild("HumanoidRootPart")
+                if not root then
+                    break
+                end
+
+                local distance = (root.Position - target.Position).Magnitude
+                if distance <= 20 then
+                    break
+                end
+
+                -- Evita ficar preso esperando indefinidamente.
+                if tick() - startTime >= 15 then
+                    break
+                end
+            end
+
+            MinkTrialMoving = false
             MinkTrialDone = true
 
-            print("[Race V4] Ponto da Mink Trial alcançado. Não vou repetir o movimento.")
+            print("[Race V4] Mink Trial alcançada. Movimento encerrado.")
 
         end)
     end
@@ -5304,15 +5333,80 @@ spawn(function()
     end
 end)
 spawn(function()
-  while wait(Sec) do
-    pcall(function()
-      if _G.Complete_Trials then
-        if tostring(plr.Data.Race.Value) == "Skypiea" then
-          notween(workspace.Map.SkyTrial.Model.FinishPart.CFrame)
-  	   end
-      end
-    end)
-  end
+    local AngelTrialDone = false
+    local AngelTrialMoving = false
+
+    while task.wait(Sec) do
+        pcall(function()
+
+            if not _G.Complete_Trials then
+                AngelTrialDone = false
+                AngelTrialMoving = false
+                return
+            end
+
+            if tostring(plr.Data.Race.Value) ~= "Skypiea" then
+                AngelTrialDone = false
+                AngelTrialMoving = false
+                return
+            end
+
+            -- Não repete o movimento depois que chegar ao FinishPart.
+            if AngelTrialDone or AngelTrialMoving then
+                return
+            end
+
+            local skyTrial = workspace.Map:FindFirstChild("SkyTrial")
+            if not skyTrial then
+                return
+            end
+
+            local model = skyTrial:FindFirstChild("Model")
+            local finishPart = model and model:FindFirstChild("FinishPart")
+
+            if not finishPart then
+                return
+            end
+
+            local target = finishPart.CFrame
+            AngelTrialMoving = true
+
+            print("[Race V4] Indo para a Trial da Angel com Tween...")
+
+            -- Usa Tween em vez de CFrame instantâneo.
+            _tp(target)
+
+            -- Espera chegar ao destino.
+            local startTime = tick()
+            while task.wait(0.05) do
+                if not _G.Complete_Trials then
+                    AngelTrialMoving = false
+                    return
+                end
+
+                local character = plr.Character
+                local root = character and character:FindFirstChild("HumanoidRootPart")
+                if not root then
+                    break
+                end
+
+                local distance = (root.Position - target.Position).Magnitude
+                if distance <= 20 then
+                    break
+                end
+
+                if tick() - startTime >= 15 then
+                    break
+                end
+            end
+
+            AngelTrialMoving = false
+            AngelTrialDone = true
+
+            print("[Race V4] Angel Trial alcançada. Movimento encerrado.")
+
+        end)
+    end
 end)
 spawn(function()
     local HumanTrialPosition = Vector3.new(
