@@ -189,8 +189,15 @@ gay = (function()
     local darkFog = lightingLayers:FindFirstChild("DarkFog")
     if darkFog then darkFog:Destroy() end
   end
-  local Water = workspace._WorldOrigin["Foam;"]
-  if Water and workspace._WorldOrigin["Foam;"] then Water:Destroy() end        
+  -- A estrutura do _WorldOrigin mudou em updates recentes.
+  -- Nunca acessa Foam; diretamente, pois ele pode não existir.
+  local WorldOrigin = workspace:FindFirstChild("_WorldOrigin")
+  local Water = WorldOrigin and WorldOrigin:FindFirstChild("Foam;")
+  if Water then
+    pcall(function()
+      Water:Destroy()
+    end)
+  end
 end)()
 local Attack = {}
 Attack.__index = Attack
