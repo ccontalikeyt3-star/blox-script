@@ -66,7 +66,7 @@ task.spawn(function()
     end)
 
     if not success then
-        warn("Falha ao executar auto-load:", err)
+        warn("[IORGUTE] Falha ao executar auto-load:", err)
     end
 end)
 
@@ -94,7 +94,7 @@ do
   shouldTween = false
   SoulGuitar = false
   KenTest = true
-  debug = false
+  DebugMode = false
   Brazier1 = false
   Brazier2 = false
   Brazier3 = false  
@@ -142,10 +142,44 @@ weaponSc = function(weapon)
     end
   end
 end
-hookfunction(require(game:GetService("ReplicatedStorage").Effect.Container.Death),function() end)
-hookfunction(require(game:GetService("ReplicatedStorage"):WaitForChild("GuideModule")).ChangeDisplayedNPC,function()end)
-hookfunction(error, function()end)
-hookfunction(warn, function()end)
+-- Compatibilidade com atualizações do Blox Fruits:
+-- alguns módulos/objetos usados pelos hooks antigos podem não existir mais.
+-- Nunca deixe a ausência deles interromper a inicialização do hub.
+do
+  local function SafeHookFunction(target, replacement)
+    if type(hookfunction) ~= "function" or type(target) ~= "function" then
+      return false
+    end
+    local ok = pcall(function()
+      hookfunction(target, replacement)
+    end)
+    return ok
+  end
+
+  -- Hook antigo de Death: só instala se Effect.Container.Death ainda existir.
+  pcall(function()
+    local Effect = replicated:FindFirstChild("Effect")
+    local Container = Effect and Effect:FindFirstChild("Container")
+    local Death = Container and Container:FindFirstChild("Death")
+    if Death then
+      local DeathModule = require(Death)
+      SafeHookFunction(DeathModule, function() end)
+    end
+  end)
+
+  -- Hook antigo do GuideModule: só instala se a função ainda existir.
+  pcall(function()
+    local GuideModule = replicated:FindFirstChild("GuideModule")
+    if GuideModule and GuideModule:IsA("ModuleScript") then
+      local Guide = require(GuideModule)
+      if type(Guide) == "table" and type(Guide.ChangeDisplayedNPC) == "function" then
+        SafeHookFunction(Guide.ChangeDisplayedNPC, function() end)
+      end
+    end
+  end)
+
+  -- NÃO sobrescreva error/warn. Isso escondia os erros reais durante a inicialização.
+end
 local Rock = workspace:FindFirstChild("Rocks")
 if Rock then Rock:Destroy()end
 gay = (function()
@@ -5620,10 +5654,10 @@ spawn(function()
         local args = {[1] = {["NPC"] = "Dojo Trainer",["Command"] = "RequestQuest"}}        
         local progress = replicated.Modules.Net:FindFirstChild("RF/InteractDragonQuest"):InvokeServer(unpack(args))
         local NameBelt = printBeltName(progress)
-        if debug == false and not progress and not NameBelt then
+        if DebugMode == false and not progress and not NameBelt then
           _tp(CFrame.new(5865.0234375, 1208.3154296875, 871.15185546875))
-          debug = true
-        elseif debug == true and (CFrame.new(5865.0234375, 1208.3154296875, 871.15185546875).Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 50 then
+          DebugMode = true
+        elseif DebugMode == true and (CFrame.new(5865.0234375, 1208.3154296875, 871.15185546875).Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 50 then
           if NameBelt == "White" then
             local v = GetConnectionEnemies("Skull Slayer")
             if v then repeat task.wait() Attack.Kill(v, _G.Dojoo) until not progress or not _G.Dojoo or not Attack.Alive(v)
@@ -5686,7 +5720,7 @@ spawn(function()
           end
         end
         if not progress then
-          debug = false
+          DebugMode = false
           local args = {[1] = {["NPC"] = "Dojo Trainer",["Command"] = "ClaimQuest"}}
           replicated.Modules.Net:FindFirstChild("RF/InteractDragonQuest"):InvokeServer(unpack(args))
         end
